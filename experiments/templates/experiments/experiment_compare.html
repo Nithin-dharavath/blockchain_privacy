@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Compare Experiments - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-bar-chart"></i> Compare Experiments</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Comparison Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_experiments" class="form-label">Select Experiments to Compare *</label>
+                            <small class="text-muted">(Hold Ctrl/Cmd to select multiple)</small>
+                            {{ form.experiments }}
+                            {% if form.experiments.errors %}
+                                <div class="text-danger">{{ form.experiments.errors }}</div>
+                            {% endif %}
+                            
+                            {% if not completed_experiments %}
+                            <div class="alert alert-warning mt-2">
+                                <i class="bi bi-exclamation-triangle"></i> No completed experiments available. 
+                                <a href="{% url 'experiments:create' %}">Run some experiments first</a>.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_notes" class="form-label">Notes (Optional)</label>
+                            {{ form.notes }}
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Select at least 2 completed experiments to compare their results.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-bar-chart"></i> Create Comparison
+                            </button>
+                            <a href="{% url 'experiments:list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if completed_experiments %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="bi bi-list"></i> Available Completed Experiments
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Technique</th>
+                                    <th>Privacy Score</th>
+                                    <th>Time (s)</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in completed_experiments %}
+                                <tr>
+                                    <td>{{ exp.name }}</td>
+                                    <td><span class="badge bg-info">{{ exp.privacy_technique.name }}</span></td>
+                                    <td>{{ exp.privacy_score|floatformat:2 }}</td>
+                                    <td>{{ exp.execution_time|floatformat:2 }}</td>
+                                    <td>{{ exp.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

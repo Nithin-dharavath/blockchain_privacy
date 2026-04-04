@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Experiment - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-flask"></i> Create New Experiment</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_name" class="form-label">Experiment Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_privacy_technique" class="form-label">Privacy Technique *</label>
+                                {{ form.privacy_technique }}
+                                {% if form.privacy_technique.errors %}
+                                    <div class="text-danger">{{ form.privacy_technique.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_dataset" class="form-label">Select Dataset *</label>
+                            {{ form.dataset }}
+                            {% if form.dataset.errors %}
+                                <div class="text-danger">{{ form.dataset.errors }}</div>
+                            {% endif %}
+                            {% if not available_datasets %}
+                            <div class="alert alert-warning mt-2">
+                                <i class="bi bi-exclamation-triangle"></i> No approved datasets available. 
+                                <a href="{% url 'datasets:upload' %}">Upload a dataset first</a>.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_configuration" class="form-label">Configuration (JSON) *</label>
+                            {{ form.configuration }}
+                            {% if form.configuration.errors %}
+                                <div class="text-danger">{{ form.configuration.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Example configurations:<br>
+                                <strong>Ring Signatures:</strong> <code>{"ring_size": 10, "num_transactions": 100}</code><br>
+                                <strong>ZKP:</strong> <code>{"num_proofs": 50}</code><br>
+                                <strong>SMPC:</strong> <code>{"num_parties": 3, "threshold": 2, "num_computations": 20}</code><br>
+                                <strong>TEE:</strong> <code>{"num_operations": 50, "data_size_mb": 1}</code><br>
+                                <strong>Mixer:</strong> <code>{"pool_size": 10, "num_transactions": 50}</code>
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle"></i> Create Experiment
+                            </button>
+                            <a href="{% url 'experiments:list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-0"><i class="bi bi-shield-check"></i> Admin Dashboard</h2>
+            <p class="text-muted">System Overview and Management</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card info">
+                <div class="card-body position-relative">
+                    <i class="bi bi-people stat-icon"></i>
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card success">
+                <div class="card-body position-relative">
+                    <i class="bi bi-flask stat-icon"></i>
+                    <div class="stat-value">{{ total_experiments }}</div>
+                    <div class="stat-label">Total Experiments</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card warning">
+                <div class="card-body position-relative">
+                    <i class="bi bi-database stat-icon"></i>
+                    <div class="stat-value">{{ total_datasets }}</div>
+                    <div class="stat-label">Total Datasets</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card danger">
+                <div class="card-body position-relative">
+                    <i class="bi bi-clock stat-icon"></i>
+                    <div class="stat-value">{{ pending_datasets }}</div>
+                    <div class="stat-label">Pending Approvals</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning"></i> Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_panel:manage_users' %}" class="btn btn-primary w-100">
+                                <i class="bi bi-people"></i> Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_panel:manage_datasets' %}" class="btn btn-warning w-100">
+                                <i class="bi bi-database"></i> Approve Datasets
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_panel:manage_techniques' %}" class="btn btn-info w-100">
+                                <i class="bi bi-gear"></i> Manage Techniques
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_panel:system_reports' %}" class="btn btn-success w-100">
+                                <i class="bi bi-graph-up"></i> System Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Performance -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-graph-up"></i> System Performance
+                </div>
+                <div class="card-body">
+                    <div class="metric-box mb-3">
+                        <div class="metric-value">{{ avg_privacy_score }}</div>
+                        <div class="metric-label">Average Privacy Score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-gear"></i> Privacy Techniques
+                </div>
+                <div class="card-body">
+                    {% if technique_stats %}
+                    <div class="list-group">
+                        {% for stat in technique_stats %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ stat.technique.name }}</span>
+                                <span class="badge bg-primary">{{ stat.experiment_count }} experiments</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No technique statistics available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-people"></i> Recent Users
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Type</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td><span class="badge bg-info">{{ user.get_user_type_display }}</span></td>
+                                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No recent users.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-clock-history"></i> Pending Datasets
+                </div>
+                <div class="card-body">
+                    {% if pending_dataset_list %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Uploaded By</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dataset in pending_dataset_list %}
+                                <tr>
+                                    <td>{{ dataset.name }}</td>
+                                    <td>{{ dataset.uploaded_by.username }}</td>
+                                    <td>
+                                        <a href="{% url 'admin_panel:approve_dataset' dataset.pk %}" class="btn btn-sm btn-success">
+                                            Review
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No pending datasets.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

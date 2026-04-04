@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ report.title }} - Report Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-text"></i> {{ report.title }}</h2>
+            <a href="{% url 'reports:list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+            {% if report.file %}
+            <a href="{% url 'reports:download' report.pk %}" class="btn btn-success">
+                <i class="bi bi-download"></i> Download Report
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-info-circle"></i> Report Information
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="30%">Title:</th>
+                                    <td>{{ report.title }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Type:</th>
+                                    <td><span class="badge bg-secondary">{{ report.get_report_type_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Format:</th>
+                                    <td><span class="badge bg-info">{{ report.get_file_format_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Created:</th>
+                                    <td>{{ report.created_at|date:"F d, Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Experiments:</th>
+                                    <td>{{ report.experiments.count }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Summary</h5>
+                            <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ report.summary }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-list"></i> Included Experiments
+                </div>
+                <div class="card-body">
+                    {% if experiments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Technique</th>
+                                    <th>Dataset</th>
+                                    <th>Privacy Score</th>
+                                    <th>Time (s)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in experiments %}
+                                <tr>
+                                    <td>{{ exp.name }}</td>
+                                    <td><span class="badge bg-primary">{{ exp.privacy_technique.name }}</span></td>
+                                    <td>{{ exp.dataset.name }}</td>
+                                    <td>{{ exp.privacy_score|floatformat:2 }}</td>
+                                    <td>{{ exp.execution_time|floatformat:2 }}</td>
+                                    <td>
+                                        <a href="{% url 'experiments:detail' exp.pk %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No experiments included.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if content_data %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-code-square"></i> Report Data
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">{{ content_data|safe }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

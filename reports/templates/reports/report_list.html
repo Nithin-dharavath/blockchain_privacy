@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Reports - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-text"></i> My Reports</h2>
+            <a href="{% url 'reports:generate' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Generate New Report
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Format</th>
+                                    <th>Experiments</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                <tr>
+                                    <td>{{ report.title }}</td>
+                                    <td><span class="badge bg-secondary">{{ report.get_report_type_display }}</span></td>
+                                    <td><span class="badge bg-info">{{ report.get_file_format_display }}</span></td>
+                                    <td>{{ report.experiments.count }}</td>
+                                    <td>{{ report.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'reports:detail' report.pk %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        {% if report.file %}
+                                        <a href="{% url 'reports:download' report.pk %}" class="btn btn-sm btn-success">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                        {% endif %}
+                                        <a href="{% url 'reports:delete' report.pk %}" class="btn btn-sm btn-danger" data-confirm-delete>
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-file-text" style="font-size: 4rem; color: #ccc;"></i>
+                        <h4 class="mt-3">No Reports Yet</h4>
+                        <p class="text-muted">Generate your first report from experiment results.</p>
+                        <a href="{% url 'reports:generate' %}" class="btn btn-primary">
+                            <i class="bi bi-file-earmark-text"></i> Generate Report
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h2>
+            <p class="text-muted">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card info">
+                <div class="card-body position-relative">
+                    <i class="bi bi-flask stat-icon"></i>
+                    <div class="stat-value">{{ total_experiments }}</div>
+                    <div class="stat-label">Total Experiments</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card success">
+                <div class="card-body position-relative">
+                    <i class="bi bi-check-circle stat-icon"></i>
+                    <div class="stat-value">{{ completed_experiments }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card warning">
+                <div class="card-body position-relative">
+                    <i class="bi bi-database stat-icon"></i>
+                    <div class="stat-value">{{ total_datasets }}</div>
+                    <div class="stat-label">Datasets</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card danger">
+                <div class="card-body position-relative">
+                    <i class="bi bi-file-text stat-icon"></i>
+                    <div class="stat-value">{{ total_reports }}</div>
+                    <div class="stat-label">Reports</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning"></i> Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'experiments:create' %}" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle"></i> New Experiment
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'datasets:upload' %}" class="btn btn-success w-100">
+                                <i class="bi bi-upload"></i> Upload Dataset
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'reports:generate' %}" class="btn btn-info w-100">
+                                <i class="bi bi-file-earmark-text"></i> Generate Report
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'experiments:compare' %}" class="btn btn-warning w-100">
+                                <i class="bi bi-bar-chart"></i> Compare Results
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-graph-up"></i> Performance Metrics
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="metric-box">
+                                <div class="metric-value">{{ avg_privacy_score }}</div>
+                                <div class="metric-label">Avg Privacy Score</div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="metric-box">
+                                <div class="metric-value">{{ avg_execution_time }}</div>
+                                <div class="metric-label">Avg Time (sec)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-gear"></i> Available Techniques
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for technique in privacy_techniques %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-shield-check text-primary"></i> {{ technique.name }}</span>
+                                <span class="badge bg-primary">{{ technique.get_technique_type_display }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Experiments -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-clock-history"></i> Recent Experiments
+                </div>
+                <div class="card-body">
+                    {% if recent_experiments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Technique</th>
+                                    <th>Status</th>
+                                    <th>Privacy Score</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in recent_experiments %}
+                                <tr>
+                                    <td>{{ exp.name }}</td>
+                                    <td>{{ exp.privacy_technique.name }}</td>
+                                    <td><span class="badge status-{{ exp.status }}">{{ exp.get_status_display }}</span></td>
+                                    <td>{{ exp.privacy_score|default:"-" }}</td>
+                                    <td>{{ exp.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'experiments:detail' exp.pk %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No experiments yet. <a href="{% url 'experiments:create' %}">Create your first experiment</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

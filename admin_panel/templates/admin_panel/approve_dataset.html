@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approve Dataset - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="bi bi-clipboard-check"></i> Review Dataset: {{ dataset.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong><i class="bi bi-info-circle"></i> Dataset Information</strong>
+                    </div>
+                    
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="30%">Dataset Name:</th>
+                            <td>{{ dataset.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Uploaded by:</th>
+                            <td>{{ dataset.uploaded_by.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type:</th>
+                            <td><span class="badge bg-secondary">{{ dataset.get_dataset_type_display }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Rows:</th>
+                            <td>{{ dataset.row_count|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Columns:</th>
+                            <td>{{ dataset.column_count|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>File Size:</th>
+                            <td>{{ dataset.file_size|filesizeformat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Anonymized:</th>
+                            <td>
+                                {% if dataset.is_anonymized %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p>{{ dataset.description }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <label for="adminNotes" class="form-label"><strong>Admin Notes (Optional)</strong></label>
+                        <textarea 
+                            id="adminNotes" 
+                            class="form-control" 
+                            rows="3" 
+                            placeholder="Add any notes about this dataset..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <!-- Approve Form -->
+                        <form method="post" id="approveForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve">
+                            <input type="hidden" name="notes" id="approveNotes">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </button>
+                        </form>
+                        
+                        <!-- Reject Form -->
+                        <form method="post" id="rejectForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <input type="hidden" name="notes" id="rejectNotes">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+                        </form>
+                        
+                        <a href="{% url 'admin_panel:manage_datasets' %}" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle approve form submission
+document.getElementById('approveForm').addEventListener('submit', function(e) {
+    const notes = document.getElementById('adminNotes').value;
+    document.getElementById('approveNotes').value = notes;
+});
+
+// Handle reject form submission
+document.getElementById('rejectForm').addEventListener('submit', function(e) {
+    if (!confirm('Are you sure you want to reject this dataset?')) {
+        e.preventDefault();
+        return false;
+    }
+    const notes = document.getElementById('adminNotes').value;
+    document.getElementById('rejectNotes').value = notes;
+});
+</script>
+{% endblock %}
