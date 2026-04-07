@@ -1,0 +1,8 @@
+p-venv/
+__pycache__/
+*.pyc
+*.log
+.env
+node_modules/
+*.csv
+media/
