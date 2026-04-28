@@ -64,7 +64,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'blockchain_privacy_db',
         'USER': 'root',
-        'PASSWORD': 'nithin@127800',
+        'PASSWORD': 'db_password',
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
