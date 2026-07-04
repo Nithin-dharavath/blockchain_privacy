@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,6 +29,7 @@ INSTALLED_APPS = [
     'reports',
     'datasets',
     'admin_panel',
+    'audit',
 ]
 
 MIDDLEWARE = [
@@ -64,7 +68,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'blockchain_privacy_db',
         'USER': 'root',
-        'PASSWORD': 'db_password',
+        'PASSWORD': os.getenv('DB_PASSWORD', 'db_password'),
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
