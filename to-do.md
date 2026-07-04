@@ -9,10 +9,10 @@
 **Goal**: Build a complete audit trail system — model, middleware, signals, and admin viewer.
 
 ### 1.1 Audit Model
-- [ ] Create `audit` Django app
-- [ ] `AuditLog` model with fields: `user` (FK User, nullable), `action_type` (choices: CREATE, UPDATE, DELETE, RUN, APPROVE, REJECT, LOGIN, LOGOUT, EXPORT, DOWNLOAD), `content_type` (CharField — model name), `object_id` (IntegerField), `object_repr` (CharField), `changes` (JSONField — before/after diff), `ip_address` (GenericIPAddressField), `request_method` (CharField), `url` (CharField), `timestamp` (DateTimeField auto_now_add)
-- [ ] Add indexes on `(content_type, object_id)`, `(user, timestamp)`, `action_type`
-- [ ] Register in admin
+- [x] Create `audit` Django app
+- [x] `AuditLog` model with fields: `user` (FK User, nullable), `action_type` (choices: CREATE, UPDATE, DELETE, RUN, APPROVE, REJECT, LOGIN, LOGOUT, EXPORT, DOWNLOAD), `content_type` (CharField — model name), `object_id` (IntegerField), `object_repr` (CharField), `changes` (JSONField — before/after diff), `ip_address` (GenericIPAddressField), `request_method` (CharField), `url` (CharField), `timestamp` (DateTimeField auto_now_add)
+- [x] Add indexes on `(content_type, object_id)`, `(user, timestamp)`, `action_type`
+- [x] Register in admin
 
 ### 1.2 Audit Middleware
 - [ ] `audit/middleware.py` — `AuditMiddleware` capturing all requests/responses
