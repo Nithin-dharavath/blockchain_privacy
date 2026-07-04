@@ -15,9 +15,9 @@
 - [x] Register in admin
 
 ### 1.2 Audit Middleware
-- [ ] `audit/middleware.py` — `AuditMiddleware` capturing all requests/responses
-- [ ] Auto-log all mutating actions (POST/PUT/DELETE) — record IP, URL, method, user agent
-- [ ] Register middleware in `settings.py`
+- [x] `audit/middleware.py` — `AuditMiddleware` capturing all requests/responses
+- [x] Auto-log all mutating actions (POST/PUT/DELETE) — record IP, URL, method, user agent
+- [x] Register middleware in `settings.py`
 
 ### 1.3 Audit Mixin & Signals
 - [ ] `audit/mixins.py` — `AuditableMixin` for models needing granular change tracking
