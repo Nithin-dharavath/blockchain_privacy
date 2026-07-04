@@ -1,8 +1,19 @@
 p-venv/
+env/
 __pycache__/
 *.pyc
+*.pyo
 *.log
 .env
 node_modules/
 *.csv
 media/
+screen shorts/
+.vscode/
+*.docx
+*.doc
+*.png
+*.jpg
+*.jpeg
+readme.txt
+QUICK_START.txt
