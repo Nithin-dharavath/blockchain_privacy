@@ -29,12 +29,12 @@
 - [x] Auto-log report generation and downloads
 
 ### 1.4 Audit Views & URLs
-- [ ] `audit/views.py`:
-  - [ ] `audit_log_list` — paginated, filterable by action_type, content_type, date range, user
-  - [ ] `audit_log_detail` — single entry with full before/after diff display
-  - [ ] `audit_object_history` — all changes for a specific object (`?content_type=Experiment&object_id=5`)
-- [ ] `audit/urls.py` — routes: `/audit/`, `/audit/<pk>/`, `/audit/object-history/`
-- [ ] Integrate into root `urls.py` under `/audit/`
+- [x] `audit/views.py`:
+  - [x] `audit_log_list` — paginated, filterable by action_type, content_type, date range, user
+  - [x] `audit_log_detail` — single entry with full before/after diff display
+  - [x] `audit_object_history` — all changes for a specific object (`?content_type=Experiment&object_id=5`)
+- [x] `audit/urls.py` — routes: `/audit/`, `/audit/<pk>/`, `/audit/object-history/`
+- [x] Integrate into root `urls.py` under `/audit/`
 
 ### 1.5 Audit Templates
 - [ ] `audit/templates/audit/audit_list.html` — table with action badges (color-coded), date range picker, type filter dropdown, search box
