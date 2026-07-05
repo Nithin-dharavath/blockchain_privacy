@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Audit Log Detail - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-0"><i class="bi bi-journal-text"></i> Audit Log Detail</h2>
+            <p class="text-muted">Full details of the audited action</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'audit:list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Back to Logs
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-info-circle"></i> Log Information
+                </div>
+                <div class="card-body">
+                    <table class="table audit-detail-table">
+                        <tbody>
+                            <tr>
+                                <td class="label">Timestamp</td>
+                                <td><strong>{{ log_entry.timestamp|date:"F d, Y H:i:s" }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="label">User</td>
+                                <td>
+                                    {% if log_entry.user %}
+                                    <strong>{{ log_entry.user.username }}</strong>
+                                    {% else %}
+                                    <span class="text-muted">System</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="label">Action</td>
+                                <td>
+                                    {% if log_entry.action_type == 'CREATE' %}
+                                    <span class="badge bg-success">Create</span>
+                                    {% elif log_entry.action_type == 'UPDATE' %}
+                                    <span class="badge bg-info">Update</span>
+                                    {% elif log_entry.action_type == 'DELETE' %}
+                                    <span class="badge bg-danger">Delete</span>
+                                    {% elif log_entry.action_type == 'RUN' %}
+                                    <span class="badge bg-primary">Run</span>
+                                    {% elif log_entry.action_type == 'APPROVE' %}
+                                    <span class="badge bg-success">Approve</span>
+                                    {% elif log_entry.action_type == 'REJECT' %}
+                                    <span class="badge bg-danger">Reject</span>
+                                    {% elif log_entry.action_type == 'LOGIN' %}
+                                    <span class="badge bg-info">Login</span>
+                                    {% elif log_entry.action_type == 'LOGOUT' %}
+                                    <span class="badge bg-secondary">Logout</span>
+                                    {% elif log_entry.action_type == 'EXPORT' %}
+                                    <span class="badge bg-warning">Export</span>
+                                    {% elif log_entry.action_type == 'DOWNLOAD' %}
+                                    <span class="badge bg-warning">Download</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ log_entry.action_type }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="label">Content Type</td>
+                                <td><code>{{ log_entry.content_type }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="label">Object ID</td>
+                                <td><code>{{ log_entry.object_id }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="label">Object</td>
+                                <td>{{ log_entry.object_repr|default:'-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">IP Address</td>
+                                <td><code>{{ log_entry.ip_address|default:'-' }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="label">HTTP Method</td>
+                                <td><span class="badge bg-secondary">{{ log_entry.request_method|default:'-' }}</span></td>
+                            </tr>
+                            <tr>
+                                <td class="label">URL</td>
+                                <td style="word-break: break-all;"><code>{{ log_entry.url|default:'-' }}</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-diagram-3"></i> Changes Overview
+                </div>
+                <div class="card-body">
+                    {% if log_entry.action_type == 'CREATE' %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-plus-circle"></i> This record was <strong>created</strong> with the following fields.
+                    </div>
+                    {% elif log_entry.action_type == 'DELETE' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-trash"></i> This record was <strong>deleted</strong>. The data below shows its final state.
+                    </div>
+                    {% elif log_entry.action_type == 'UPDATE' and before and after %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-pencil-square"></i> This record was <strong>updated</strong>. The following fields changed.
+                    </div>
+                    {% elif log_entry.action_type == 'UPDATE' %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-pencil-square"></i> This record was <strong>updated</strong>.
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.changes %}
+                    <table class="table audit-diff-table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Before</th>
+                                <th>After</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for field, change in log_entry.changes.items %}
+                            <tr>
+                                <td><code>{{ field }}</code></td>
+                                <td class="audit-diff-before">
+                                    {% if change.old is not None %}
+                                        {% if change.old == '' %}
+                                        <span class="text-muted"><em>empty</em></span>
+                                        {% else %}
+                                        <pre>{{ change.old }}</pre>
+                                        {% endif %}
+                                    {% else %}
+                                    <span class="text-muted"><em>null</em></span>
+                                    {% endif %}
+                                </td>
+                                <td class="audit-diff-after">
+                                    {% if change.new is not None %}
+                                        {% if change.new == '' %}
+                                        <span class="text-muted"><em>empty</em></span>
+                                        {% else %}
+                                        <pre>{{ change.new }}</pre>
+                                        {% endif %}
+                                    {% else %}
+                                    <span class="text-muted"><em>null</em></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-info-circle" style="font-size: 3rem; color: var(--text-muted);"></i>
+                        <p class="text-muted mt-3">No detailed change data available for this entry.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if log_entry.action_type == 'UPDATE' and before and after %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-layout-split"></i> Side-by-Side Comparison
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-danger mb-3"><i class="bi bi-file-earmark-x"></i> Before</h5>
+                            <div class="audit-sidebar">
+                                {% for field, value in before.items %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">{{ field }}</label>
+                                    <div class="audit-value-box before">
+                                        {% if value is not None %}
+                                        <pre>{{ value }}</pre>
+                                        {% else %}
+                                        <span class="text-muted"><em>null</em></span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-success mb-3"><i class="bi bi-file-earmark-check"></i> After</h5>
+                            <div class="audit-sidebar">
+                                {% for field, value in after.items %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">{{ field }}</label>
+                                    <div class="audit-value-box after">
+                                        {% if value is not None %}
+                                        <pre>{{ value }}</pre>
+                                        {% else %}
+                                        <span class="text-muted"><em>null</em></span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

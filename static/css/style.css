@@ -671,3 +671,148 @@ footer {
 .bg-light {
     color: #111827 !important;
 }
+
+/* =================================
+   AUDIT LOGS
+================================= */
+
+/* Filter Bar */
+.audit-filter-bar {
+    background: var(--dark-surface);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Detail Table Labels */
+.audit-detail-table td.label {
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    width: 130px;
+    vertical-align: middle;
+    padding: 0.75rem 0.5rem 0.75rem 0;
+}
+
+.audit-detail-table td {
+    padding: 0.75rem 0;
+    border: none;
+    background: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+.audit-detail-table td strong {
+    color: var(--text-primary);
+}
+
+.audit-detail-table {
+    background: transparent;
+    margin: 0;
+}
+
+/* Diff Table in Detail */
+.audit-diff-table {
+    font-size: 0.875rem;
+}
+
+.audit-diff-table thead th {
+    background: var(--primary-gradient);
+    color: white !important;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1rem;
+}
+
+.audit-diff-table tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: top;
+    color: var(--text-primary) !important;
+    background: transparent !important;
+}
+
+.audit-diff-table tbody tr {
+    background: transparent;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.audit-diff-table tbody tr:hover {
+    background: rgba(139, 92, 246, 0.05) !important;
+}
+
+.audit-diff-table pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.audit-diff-before {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.audit-diff-before pre {
+    border-left: 3px solid var(--red-500);
+}
+
+.audit-diff-after {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.audit-diff-after pre {
+    border-left: 3px solid var(--green-500);
+}
+
+/* Sidebar Value Boxes */
+.audit-value-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+}
+
+.audit-value-box.before {
+    border-left: 4px solid var(--red-500);
+}
+
+.audit-value-box.after {
+    border-left: 4px solid var(--green-500);
+}
+
+.audit-value-box pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Sidebar layout */
+.audit-sidebar {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.audit-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Card body text overrides in card context */
+.card .audit-detail-table td,
+.card .audit-diff-table tbody td {
+    color: var(--text-primary) !important;
+}

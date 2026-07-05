@@ -1,0 +1,53 @@
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Action Type</label>
+                <select name="action_type" class="form-select">
+                    <option value="">All Actions</option>
+                    {% for code, label in action_choices %}
+                    <option value="{{ code }}" {% if filters.action_type == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Content Type</label>
+                <select name="content_type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for ct in content_type_values %}
+                    <option value="{{ ct }}" {% if filters.content_type == ct %}selected{% endif %}>{{ ct }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">User</label>
+                <select name="user_id" class="form-select">
+                    <option value="">All Users</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}" {% if filters.user_id|stringformat:"s" == u.id|stringformat:"s" %}selected{% endif %}>{{ u.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ filters.date_from|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ filters.date_to|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Object, URL..." value="{{ filters.search|default:'' }}">
+            </div>
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+                <a href="{% url 'audit:list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
