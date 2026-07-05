@@ -37,9 +37,9 @@
 - [x] Integrate into root `urls.py` under `/audit/`
 
 ### 1.5 Audit Templates
-- [ ] `audit/templates/audit/audit_list.html` — table with action badges (color-coded), date range picker, type filter dropdown, search box
-- [ ] `audit/templates/audit/audit_detail.html` — JSON diff view with before/after side-by-side
-- [ ] `audit/templates/audit/partials/_audit_filters.html` — reusable filter bar component
+- [x] `audit/templates/audit/audit_list.html` — table with action badges (color-coded), date range picker, type filter dropdown, search box
+- [x] `audit/templates/audit/audit_detail.html` — JSON diff view with before/after side-by-side
+- [x] `audit/templates/audit/partials/_audit_filters.html` — reusable filter bar component
 
 ### 1.6 Audit Management Commands
 - [ ] `python manage.py purge_audit_logs --days 90` — delete logs older than N days
