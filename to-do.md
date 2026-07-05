@@ -46,13 +46,13 @@
 - [x] `python manage.py export_audit_logs --start --end --out export.json` — export to JSON
 
 ### 1.7 Logging Configuration
-- [ ] Add `LOGGING` dict in `settings.py`:
-  - [ ] `audit` logger → `logs/audit.log`
-  - [ ] `experiments` logger → `logs/experiments.log` (run start/end/fail)
-  - [ ] `reports` logger → `logs/reports.log` (generate/download)
-  - [ ] `error` logger → `logs/error.log` (exceptions)
-  - [ ] Console handler for development
-  - [ ] Rotating file handlers: 10 MB per file, 5 backups each
+- [x] Add `LOGGING` dict in `settings.py`:
+  - [x] `audit` logger → `logs/audit.log`
+  - [x] `experiments` logger → `logs/experiments.log` (run start/end/fail)
+  - [x] `reports` logger → `logs/reports.log` (generate/download)
+  - [x] `error` logger → `logs/error.log` (exceptions)
+  - [x] Console handler for development
+  - [x] Rotating file handlers: 10 MB per file, 5 backups each
 
 ---
 

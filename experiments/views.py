@@ -10,6 +10,7 @@ from privacy_tools.models import PrivacyTechnique
 import pandas as pd
 import time
 import json
+import logging
 
 # Import privacy techniques
 import sys
@@ -21,6 +22,8 @@ from privacy_tools.techniques.zero_knowledge_proof import ZeroKnowledgeProof
 from privacy_tools.techniques.secure_mpc import SecureMultiPartyComputation
 from privacy_tools.techniques.trusted_execution import TrustedExecutionEnvironment
 from privacy_tools.techniques.crypto_mixer import CryptocurrencyMixer
+
+exp_logger = logging.getLogger('experiments')
 
 @login_required
 def experiment_list(request):
@@ -100,6 +103,7 @@ def run_experiment(request, pk):
     experiment.status = 'running'
     experiment.started_at = timezone.now()
     experiment.save()
+    exp_logger.info("Experiment %s started by %s", experiment.pk, request.user.username)
     
     try:
         # Load dataset
@@ -123,6 +127,11 @@ def run_experiment(request, pk):
         experiment.status = 'completed'
         experiment.completed_at = timezone.now()
         experiment.save()
+        exp_logger.info(
+            "Experiment %s completed in %.3fs (privacy=%.4f, accuracy=%.4f)",
+            experiment.pk, experiment.execution_time,
+            experiment.privacy_score, experiment.accuracy,
+        )
         
         messages.success(request, f'Experiment "{experiment.name}" completed successfully!')
     
@@ -131,6 +140,7 @@ def run_experiment(request, pk):
         experiment.error_message = str(e)
         experiment.completed_at = timezone.now()
         experiment.save()
+        exp_logger.error("Experiment %s failed: %s", experiment.pk, str(e))
         
         messages.error(request, f'Experiment failed: {str(e)}')
     
@@ -151,6 +161,7 @@ def experiment_run(request, pk):
     experiment.status = 'running'
     experiment.started_at = timezone.now()
     experiment.save()
+    exp_logger.info("Experiment %s started by %s", experiment.pk, request.user.username)
     
     try:
         # Load dataset
@@ -188,6 +199,11 @@ def experiment_run(request, pk):
         experiment.anonymity_set_size = results.get('anonymity_set_size', 0)
         experiment.metrics = results
         experiment.save()
+        exp_logger.info(
+            "Experiment %s completed in %.3fs (privacy=%.4f, accuracy=%.4f)",
+            experiment.pk, experiment.execution_time,
+            experiment.privacy_score, experiment.accuracy,
+        )
         
         messages.success(request, 'Experiment completed successfully!')
         
@@ -196,6 +212,7 @@ def experiment_run(request, pk):
         experiment.error_message = str(e)
         experiment.completed_at = timezone.now()
         experiment.save()
+        exp_logger.error("Experiment %s failed: %s", experiment.pk, str(e))
         
         messages.error(request, f'Experiment failed: {str(e)}')
     
