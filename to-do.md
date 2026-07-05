@@ -20,13 +20,13 @@
 - [x] Register middleware in `settings.py`
 
 ### 1.3 Audit Mixin & Signals
-- [ ] `audit/mixins.py` — `AuditableMixin` for models needing granular change tracking
-- [ ] Override `save()` and `delete()` to log changes automatically
-- [ ] Connect `post_save`/`post_delete` signals to: Experiment, Dataset, Report, User, PrivacyTechnique, ExperimentComparison
-- [ ] Auto-log experiment status transitions (pending→running→completed/failed)
-- [ ] Auto-log dataset approvals/rejections
-- [ ] Auto-log user logins/logouts (via signals on `user_logged_in`/`user_logged_out`)
-- [ ] Auto-log report generation and downloads
+- [x] `audit/mixins.py` — `AuditableMixin` for models needing granular change tracking
+- [x] Override `save()` and `delete()` to log changes automatically
+- [x] Connect `post_save`/`post_delete` signals to: Experiment, Dataset, Report, User, PrivacyTechnique, ExperimentComparison
+- [x] Auto-log experiment status transitions (pending→running→completed/failed)
+- [x] Auto-log dataset approvals/rejections
+- [x] Auto-log user logins/logouts (via signals on `user_logged_in`/`user_logged_out`)
+- [x] Auto-log report generation and downloads
 
 ### 1.4 Audit Views & URLs
 - [ ] `audit/views.py`:

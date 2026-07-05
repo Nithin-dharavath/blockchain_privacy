@@ -2,9 +2,10 @@ from django.db import models
 from accounts.models import User
 from datasets.models import Dataset
 from privacy_tools.models import PrivacyTechnique
+from audit.mixins import AuditableMixin
 import json
 
-class Experiment(models.Model):
+class Experiment(AuditableMixin, models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('running', 'Running'),
@@ -53,7 +54,7 @@ class Experiment(models.Model):
         ordering = ['-created_at']
 
 
-class ExperimentComparison(models.Model):
+class ExperimentComparison(AuditableMixin, models.Model):
     name = models.CharField(max_length=200)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comparisons')
     experiments = models.ManyToManyField(Experiment, related_name='comparisons')

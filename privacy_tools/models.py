@@ -1,7 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from audit.mixins import AuditableMixin
 
-class PrivacyTechnique(models.Model):
+class PrivacyTechnique(AuditableMixin, models.Model):
     TECHNIQUE_CHOICES = (
         ('ring_signature', 'Ring Signatures'),
         ('zkp', 'Zero-Knowledge Proofs'),

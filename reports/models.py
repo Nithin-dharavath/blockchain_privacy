@@ -1,8 +1,9 @@
 from django.db import models
 from accounts.models import User
 from experiments.models import Experiment
+from audit.mixins import AuditableMixin
 
-class Report(models.Model):
+class Report(AuditableMixin, models.Model):
     REPORT_TYPE_CHOICES = (
         ('single', 'Single Experiment'),
         ('comparison', 'Comparison Report'),
