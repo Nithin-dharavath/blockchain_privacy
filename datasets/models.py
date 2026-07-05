@@ -2,12 +2,13 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
+from audit.mixins import AuditableMixin
 import os
 
 User = get_user_model()
 
 
-class Dataset(models.Model):
+class Dataset(AuditableMixin, models.Model):
     """Model for storing user-uploaded datasets"""
     
     DATASET_TYPES = [
