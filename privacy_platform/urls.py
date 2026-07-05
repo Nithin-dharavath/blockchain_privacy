@@ -12,6 +12,7 @@ urlpatterns = [
     path('datasets/', include('datasets.urls')),
     path('experiments/', include('experiments.urls')),
     path('reports/', include('reports.urls')),
+    path('audit/', include('audit.urls')),
     path('admin-panel/', include('admin_panel.urls')),
 ]
 
