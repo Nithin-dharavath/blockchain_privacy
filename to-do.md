@@ -42,8 +42,8 @@
 - [x] `audit/templates/audit/partials/_audit_filters.html` — reusable filter bar component
 
 ### 1.6 Audit Management Commands
-- [ ] `python manage.py purge_audit_logs --days 90` — delete logs older than N days
-- [ ] `python manage.py export_audit_logs --start --end --out export.json` — export to JSON
+- [x] `python manage.py purge_audit_logs --days 90` — delete logs older than N days
+- [x] `python manage.py export_audit_logs --start --end --out export.json` — export to JSON
 
 ### 1.7 Logging Configuration
 - [ ] Add `LOGGING` dict in `settings.py`:
