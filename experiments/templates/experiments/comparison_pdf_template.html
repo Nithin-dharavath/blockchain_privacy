@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Comparison Report: {{ comparison.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .metric { margin: 10px 0; }
+        .metric-label { font-weight: bold; }
+        .best { color: green; font-weight: bold; }
+        .worst { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Comparison Report: {{ comparison.name }}</h1>
+    <p><strong>Generated:</strong> {{ comparison.created_at|date:"Y-m-d H:i:s" }}</p>
+    {% if comparison.notes %}
+    <p><strong>Notes:</strong> {{ comparison.notes }}</p>
+    {% endif %}
+    
+    <h2>Summary Statistics</h2>
+    <div class="metric">
+        <span class="metric-label">Experiments Compared:</span> {{ comparison_data|length }}
+    </div>
+    <div class="metric">
+        <span class="metric-label">Best Privacy Score:</span> {{ best_privacy_score|floatformat:2 }}
+    </div>
+    <div class="metric">
+        <span class="metric-label">Fastest Execution Time:</span> {{ fastest_execution_time|floatformat:2 }}s
+    </div>
+    
+    <h2>Detailed Results</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Experiment Name</th>
+                <th>Privacy Technique</th>
+                <th>Privacy Score</th>
+                <th>Execution Time (s)</th>
+                <th>Accuracy</th>
+                <th>Throughput (tps)</th>
+                <th>Anonymity Set</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in comparison_data %}
+            <tr>
+                <td>{{ data.name }}</td>
+                <td>{{ data.technique }}</td>
+                <td>{{ data.privacy_score|floatformat:2 }}</td>
+                <td>{{ data.execution_time|floatformat:3 }}</td>
+                <td>{{ data.accuracy|floatformat:4 }}</td>
+                <td>{{ data.throughput|floatformat:2 }}</td>
+                <td>{{ data.anonymity_set_size }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <h2>Recommendations</h2>
+    <div class="metric">
+        <span class="metric-label">Best for Privacy:</span> 
+        {% for data in comparison_data %}
+            {% if forloop.first %}{{ data.name }} ({{ data.technique }}) with score {{ data.privacy_score|floatformat:2 }}{% endif %}
+        {% endfor %}
+    </div>
+    <div class="metric">
+        <span class="metric-label">Best for Performance:</span> 
+        {% for data in comparison_data %}
+            {% if forloop.first %}{{ data.name }} with {{ data.execution_time|floatformat:2 }}s execution time{% endif %}
+        {% endfor %}
+    </div>
+</body>
+</html>

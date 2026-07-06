@@ -678,10 +678,101 @@ def comparison_detail(request, pk):
     comparison = get_object_or_404(ExperimentComparison, pk=pk, user=request.user)
     experiments = comparison.experiments.all()
     
-    # Prepare comparison data
+    # Prepare comparison data with actual best values computed
     comparison_data = []
+    best_privacy_score = 0
+    best_accuracy = 0
+    best_throughput = 0
+    fastest_execution_time = float('inf')
+    
     for exp in experiments:
+        privacy_score = exp.privacy_score or 0
+        execution_time = exp.execution_time or 0
+        accuracy = exp.accuracy or 0
+        throughput = exp.throughput or 0
+        
         comparison_data.append({
+            'name': exp.name,
+            'technique': exp.privacy_technique.name,
+            'privacy_score': privacy_score,
+            'execution_time': execution_time,
+            'accuracy': accuracy,
+            'throughput': throughput,
+            'anonymity_set_size': exp.anonymity_set_size or 0,
+            'metrics': exp.metrics or {},
+        })
+        
+        # Compute actual best values
+        if privacy_score > best_privacy_score:
+            best_privacy_score = privacy_score
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+        if throughput > best_throughput:
+            best_throughput = throughput
+        if execution_time < fastest_execution_time and execution_time > 0:
+            fastest_execution_time = execution_time
+    
+    # Reset fastest_execution_time if no valid time found
+    if fastest_execution_time == float('inf'):
+        fastest_execution_time = 0
+    
+    # Generate charts
+    radar_chart = generate_radar_chart(experiments)
+    comparison_chart = generate_comparison_chart(experiments, chart_type='grouped_bar')
+    
+    # Generate ranking data with color coding
+    ranking_data = []
+    for data in comparison_data:
+        ranking_data.append({
+            'name': data['name'],
+            'technique': data['technique'],
+            'privacy_score': data['privacy_score'],
+            'execution_time': data['execution_time'],
+            'accuracy': data['accuracy'],
+            'throughput': data['throughput'],
+            'anonymity_set_size': data['anonymity_set_size'],
+            'is_best_privacy': data['privacy_score'] == best_privacy_score and best_privacy_score > 0,
+            'is_worst_privacy': data['privacy_score'] == min(d['privacy_score'] for d in comparison_data) if comparison_data else False,
+            'is_fastest': data['execution_time'] == fastest_execution_time and fastest_execution_time > 0,
+            'is_slowest': data['execution_time'] == max(d['execution_time'] for d in comparison_data) if comparison_data else False,
+            'is_most_accurate': data['accuracy'] == best_accuracy and best_accuracy > 0,
+            'least_accurate': data['accuracy'] == min(d['accuracy'] for d in comparison_data) if comparison_data else False,
+            'is_highest_throughput': data['throughput'] == best_throughput and best_throughput > 0,
+            'lowest_throughput': data['throughput'] == min(d['throughput'] for d in comparison_data) if comparison_data else False,
+        })
+    
+    # Find best for privacy and performance
+    best_privacy_exp = max(comparison_data, key=lambda x: x['privacy_score']) if comparison_data else None
+    best_performance_exp = min(comparison_data, key=lambda x: x['execution_time'] if x['execution_time'] > 0 else float('inf')) if comparison_data else None
+    
+    context = {
+        'comparison': comparison,
+        'experiments': experiments,
+        'comparison_data': comparison_data,
+        'best_privacy_score': best_privacy_score,
+        'fastest_execution_time': fastest_execution_time,
+        'best_accuracy': best_accuracy,
+        'best_throughput': best_throughput,
+        'radar_chart': radar_chart,
+        'comparison_chart': comparison_chart,
+        'ranking_data': ranking_data,
+        'best_privacy_exp': best_privacy_exp,
+        'best_performance_exp': best_performance_exp,
+    }
+    return render(request, 'experiments/comparison_detail.html', context)
+
+@login_required
+def export_comparison(request, pk):
+    """Export comparison data to CSV or PDF"""
+    comparison = get_object_or_404(ExperimentComparison, pk=pk, user=request.user)
+    experiments = comparison.experiments.all()
+    
+    format_type = request.GET.get('format', 'csv')
+    
+    # Prepare data
+    data = []
+    for exp in experiments:
+        data.append({
             'name': exp.name,
             'technique': exp.privacy_technique.name,
             'privacy_score': exp.privacy_score or 0,
@@ -691,12 +782,33 @@ def comparison_detail(request, pk):
             'anonymity_set_size': exp.anonymity_set_size or 0,
         })
     
-    context = {
-        'comparison': comparison,
-        'experiments': experiments,
-        'comparison_data': comparison_data
-    }
-    return render(request, 'experiments/comparison_detail.html', context)
+    df = pd.DataFrame(data)
+    
+    if format_type == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="comparison_{comparison.pk}.csv"'
+        df.to_csv(response, index=False)
+        return response
+    elif format_type == 'pdf':
+        # For PDF, we'll return a simple HTML response that can be printed to PDF
+        # In a real implementation, you'd use a library like reportlab
+        from django.template.loader import render_to_string
+        
+        # Prepare context for template
+        context = {
+            'comparison': comparison,
+            'comparison_data': data,
+            'best_privacy_score': max(d['privacy_score'] for d in data) if data else 0,
+            'fastest_execution_time': min(d['execution_time'] for d in data if d['execution_time'] > 0) if data else 0,
+        }
+        html_content = render_to_string('experiments/comparison_pdf_template.html', context)
+        
+        response = HttpResponse(html_content, content_type='text/html')
+        response['Content-Disposition'] = f'attachment; filename="comparison_{comparison.pk}.html"'
+        return response
+    
+    messages.error(request, 'Invalid format specified.')
+    return redirect('experiments:comparison_detail', pk=pk)
 
 @login_required
 def experiment_delete(request, pk):

@@ -86,16 +86,16 @@
 - [x] Add "Generate Report" quick button — pre-selects this experiment in report form
 
 ### 2.4 Fix & Enhance Comparison Detail
-- [ ] **BUG FIX**: Replace broken `{% forloop.first %}` logic — actually compute:
-  - [ ] Best privacy score (max)
-  - [ ] Fastest execution time (min)
-  - [ ] Best accuracy (max)
-  - [ ] Best throughput (max)
-- [ ] Add radar chart comparing all techniques across 6 axes
-- [ ] Add grouped bar charts per metric
-- [ ] Add ranking table with color-coded cells (green=best, red=worst)
-- [ ] Add per-technique score breakdown (expandable accordion with sub-metrics)
-- [ ] Add "Download Comparison" button (PDF/CSV)
+- [x] **BUG FIX**: Replace broken `{% forloop.first %}` logic — actually compute:
+  - [x] Best privacy score (max)
+  - [x] Fastest execution time (min)
+  - [x] Best accuracy (max)
+  - [x] Best throughput (max)
+- [x] Add radar chart comparing all techniques across 6 axes
+- [x] Add grouped bar charts per metric
+- [x] Add ranking table with color-coded cells (green=best, red=worst)
+- [x] Add per-technique score breakdown (expandable accordion with sub-metrics)
+- [x] Add "Download Comparison" button (PDF/CSV)
 
 ### 2.5 Templates for Phase 2
 - [ ] `experiments/templates/experiments/results_dashboard.html`
