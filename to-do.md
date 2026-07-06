@@ -98,11 +98,11 @@
 - [x] Add "Download Comparison" button (PDF/CSV)
 
 ### 2.5 Templates for Phase 2
-- [ ] `experiments/templates/experiments/results_dashboard.html`
-- [ ] `experiments/templates/experiments/partials/_metric_charts.html`
-- [ ] `experiments/templates/experiments/partials/_comparison_charts.html`
-- [ ] Update `experiment_detail.html` with chart sections
-- [ ] Update `comparison_detail.html` with proper best/worst logic and charts
+- [x] `experiments/templates/experiments/results_dashboard.html`
+- [x] `experiments/templates/experiments/partials/_metric_charts.html`
+- [x] `experiments/templates/experiments/partials/_comparison_charts.html`
+- [x] Update `experiment_detail.html` with chart sections
+- [x] Update `comparison_detail.html` with proper best/worst logic and charts
 
 ---
 

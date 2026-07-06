@@ -1,0 +1,30 @@
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="mb-0"><i class="bi bi-diagram-3 text-purple" style="color: #8B5CF6;"></i> Radar Chart - Technique Comparison</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if radar_chart %}
+                <img src="data:image/png;base64,{{ radar_chart }}" class="img-fluid rounded" alt="Radar Chart" style="max-height: 400px;">
+                {% else %}
+                <p class="text-muted py-4">No radar chart data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="mb-0"><i class="bi bi-bar-chart-steps text-success"></i> Grouped Bar Chart - Metric Comparison</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if comparison_chart %}
+                <img src="data:image/png;base64,{{ comparison_chart }}" class="img-fluid rounded" alt="Comparison Chart" style="max-height: 400px;">
+                {% else %}
+                <p class="text-muted py-4">No comparison chart data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
