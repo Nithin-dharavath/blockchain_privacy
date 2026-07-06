@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Report, ReportSchedule, ReportTemplate
+from .models import Report, ReportSchedule, ReportTemplate, ReportShare
 
 @admin.register(ReportTemplate)
 class ReportTemplateAdmin(admin.ModelAdmin):
@@ -22,6 +22,18 @@ class ReportAdmin(admin.ModelAdmin):
     search_fields = ['title', 'user__username']
     readonly_fields = ['created_at']
     filter_horizontal = ['experiments']
+
+@admin.register(ReportShare)
+class ReportShareAdmin(admin.ModelAdmin):
+    list_display = ['report', 'shared_by', 'shared_with_user', 'permissions', 'access_count', 'is_active', 'is_revoked', 'created_at']
+    list_filter = ['permissions', 'is_revoked', 'created_at']
+    search_fields = ['report__title', 'shared_by__username', 'shared_with_user__username']
+    readonly_fields = ['share_token', 'created_at', 'last_accessed', 'access_count']
+
+    def is_active(self, obj):
+        return obj.is_active()
+    is_active.boolean = True
+    is_active.short_description = 'Active'
 
 @admin.register(ReportSchedule)
 class ReportScheduleAdmin(admin.ModelAdmin):

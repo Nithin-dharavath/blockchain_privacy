@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Share Report - {{ report.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-share"></i> Share Report</h2>
+            <p class="text-muted">{{ report.title }}</p>
+            <a href="{% url 'reports:detail' report.pk %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Report
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-link-45deg"></i> Create Share Link
+                </div>
+                <div class="card-body">
+                    <form id="shareForm" method="post" action="{% url 'reports:share_report' report.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="shared_with_user" class="form-label">Share with user (optional)</label>
+                            <input type="text" class="form-control" id="shared_with_user" name="shared_with_user"
+                                   placeholder="Username — leave blank for anonymous link">
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissions" class="form-label">Permissions</label>
+                            <select class="form-select" id="permissions" name="permissions">
+                                <option value="view_only">View Only</option>
+                                <option value="download">Can Download</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="expires_days" class="form-label">Expires after (days, optional)</label>
+                            <input type="number" class="form-control" id="expires_days" name="expires_days"
+                                   placeholder="Leave blank for no expiry" min="1" max="365">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-share"></i> Generate Share Link
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-clipboard"></i> Generated Link
+                </div>
+                <div class="card-body">
+                    <div id="shareResult" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label">Share URL</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="shareUrl" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyShareUrl()">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Share link created successfully!
+                            <span id="shareDetails" class="d-block mt-1 small"></span>
+                        </div>
+                    </div>
+                    <div id="shareEmpty" class="text-muted text-center py-4">
+                        <i class="bi bi-link-45deg" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Generate a share link above</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-list"></i> Existing Shares
+                </div>
+                <div class="card-body">
+                    {% if shares %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Shared With</th>
+                                    <th>Permissions</th>
+                                    <th>Created</th>
+                                    <th>Expires</th>
+                                    <th>Access Count</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for share in shares %}
+                                <tr>
+                                    <td><code>{{ share.share_token|truncatechars:12 }}</code></td>
+                                    <td>{{ share.shared_with_user.username|default:"Anyone with link" }}</td>
+                                    <td><span class="badge bg-info">{{ share.get_permissions_display }}</span></td>
+                                    <td>{{ share.created_at|date:"M d, Y" }}</td>
+                                    <td>{{ share.expires_at|date:"M d, Y"|default:"Never" }}</td>
+                                    <td>{{ share.access_count }}</td>
+                                    <td>
+                                        {% if share.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% elif share.is_revoked %}
+                                        <span class="badge bg-danger">Revoked</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Expired</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if share.is_active %}
+                                        <button class="btn btn-sm btn-outline-primary" onclick="copyShareUrl('{{ request.scheme }}://{{ request.get_host }}{% url 'reports:shared_view' share.share_token %}')">
+                                            <i class="bi bi-clipboard"></i> Copy
+                                        </button>
+                                        <form method="post" action="{% url 'reports:revoke_share' report.pk share.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Revoke this share link?')">
+                                                <i class="bi bi-x-circle"></i> Revoke
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No shares created yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No shares created yet for this report.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('shareForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('shareResult').classList.remove('d-none');
+            document.getElementById('shareEmpty').classList.add('d-none');
+            document.getElementById('shareUrl').value = data.share_url;
+
+            const details = document.getElementById('shareDetails');
+            let detailText = `Permissions: ${data.permissions}`;
+            if (data.expires_at) {
+                detailText += ` | Expires: ${new Date(data.expires_at).toLocaleDateString()}`;
+            }
+            details.textContent = detailText;
+
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            alert('Error: ' + (data.error || 'Failed to create share link'));
+        }
+    })
+    .catch(error => {
+        alert('Error creating share link. Please try again.');
+    });
+});
+
+function copyShareUrl(url) {
+    const input = document.getElementById('shareUrl');
+    if (url) {
+        input.value = url;
+    }
+    input.select();
+    navigator.clipboard.writeText(input.value)
+        .then(() => {
+            const btn = event.target.closest('button');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+            setTimeout(() => btn.innerHTML = original, 2000);
+        });
+}
+</script>
+{% endblock %}

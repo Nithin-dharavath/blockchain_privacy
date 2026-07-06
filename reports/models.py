@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from accounts.models import User
 from experiments.models import Experiment
@@ -123,4 +124,61 @@ class ReportSchedule(models.Model):
 
     class Meta:
         db_table = 'report_schedules'
+        ordering = ['-created_at']
+
+
+class ReportShare(models.Model):
+    PERMISSION_CHOICES = (
+        ('view_only', 'View Only'),
+        ('download', 'Can Download'),
+    )
+
+    report = models.ForeignKey(
+        Report, on_delete=models.CASCADE, related_name='shared_links'
+    )
+    shared_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='shared_reports'
+    )
+    shared_with_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL,
+        blank=True, null=True, related_name='received_shares'
+    )
+    share_token = models.UUIDField(
+        unique=True, default=uuid.uuid4, editable=False
+    )
+    expires_at = models.DateTimeField(blank=True, null=True)
+    max_access_count = models.IntegerField(blank=True, null=True)
+    permissions = models.CharField(
+        max_length=20, choices=PERMISSION_CHOICES, default='view_only'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_accessed = models.DateTimeField(blank=True, null=True)
+    access_count = models.IntegerField(default=0)
+    is_revoked = models.BooleanField(default=False)
+
+    def is_expired(self):
+        if self.expires_at and self.expires_at < datetime.now(self.expires_at.tzinfo):
+            return True
+        return False
+
+    def is_active(self):
+        if self.is_revoked:
+            return False
+        if self.is_expired():
+            return False
+        if self.max_access_count and self.access_count >= self.max_access_count:
+            return False
+        return True
+
+    def record_access(self):
+        from django.utils import timezone
+        self.access_count += 1
+        self.last_accessed = timezone.now()
+        self.save(update_fields=['access_count', 'last_accessed'])
+
+    def __str__(self):
+        return f"Share {self.share_token} - {self.report.title}"
+
+    class Meta:
+        db_table = 'report_shares'
         ordering = ['-created_at']

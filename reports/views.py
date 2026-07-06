@@ -6,7 +6,8 @@ from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-from .models import Report, ReportSchedule, ReportTemplate
+from django.urls import reverse
+from .models import Report, ReportSchedule, ReportTemplate, ReportShare
 from .forms import ReportGenerationForm, ReportScheduleForm, ReportTemplateForm
 from experiments.models import Experiment
 import json
@@ -630,3 +631,128 @@ def template_delete(request, pk):
     template.delete()
     messages.success(request, f'Template "{name}" deleted successfully.')
     return redirect('reports:template_list')
+
+
+# ─── Report Sharing Views ──────────────────────────────────────
+
+@login_required
+@require_POST
+def share_report(request, pk):
+    report = get_object_or_404(Report, pk=pk, user=request.user)
+    shared_with = request.POST.get('shared_with_user', '').strip()
+    permissions = request.POST.get('permissions', 'view_only')
+    expires_days = request.POST.get('expires_days', '').strip()
+
+    shared_with_user = None
+    if shared_with:
+        from accounts.models import User
+        try:
+            shared_with_user = User.objects.get(username=shared_with)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+    share = ReportShare(
+        report=report,
+        shared_by=request.user,
+        shared_with_user=shared_with_user,
+        permissions=permissions,
+    )
+    if expires_days:
+        from datetime import timedelta
+        from django.utils import timezone
+        share.expires_at = timezone.now() + timedelta(days=int(expires_days))
+    share.save()
+
+    report_logger.info(
+        "Report %s shared by %s (token=%s, user=%s, perms=%s)",
+        report.pk, request.user.username,
+        share.share_token, shared_with or 'anonymous', permissions,
+    )
+
+    share_url = request.build_absolute_uri(
+        reverse('reports:shared_view', kwargs={'token': str(share.share_token)})
+    )
+    return JsonResponse({
+        'success': True,
+        'share_token': str(share.share_token),
+        'share_url': share_url,
+        'permissions': permissions,
+        'expires_at': share.expires_at.isoformat() if share.expires_at else None,
+    })
+
+
+@login_required
+def manage_shares(request, pk):
+    report = get_object_or_404(Report, pk=pk, user=request.user)
+    shares = report.shared_links.all().order_by('-created_at')
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        share_data = []
+        for s in shares:
+            share_data.append({
+                'id': s.id,
+                'share_token': str(s.share_token),
+                'shared_with': s.shared_with_user.username if s.shared_with_user else 'Anyone with link',
+                'permissions': s.get_permissions_display(),
+                'created_at': s.created_at.isoformat(),
+                'access_count': s.access_count,
+                'is_active': s.is_active(),
+                'is_revoked': s.is_revoked,
+                'expires_at': s.expires_at.isoformat() if s.expires_at else None,
+            })
+        return JsonResponse({'shares': share_data})
+
+    context = {
+        'report': report,
+        'shares': shares,
+    }
+    return render(request, 'reports/share_report.html', context)
+
+
+@login_required
+@require_POST
+def revoke_share(request, pk, share_pk):
+    report = get_object_or_404(Report, pk=pk, user=request.user)
+    share = get_object_or_404(ReportShare, pk=share_pk, report=report)
+    share.is_revoked = True
+    share.save(update_fields=['is_revoked'])
+    messages.success(request, 'Share link revoked successfully.')
+    return redirect('reports:manage_shares', pk=pk)
+
+
+def shared_report_view(request, token):
+    share = get_object_or_404(ReportShare, share_token=token)
+
+    if not share.is_active():
+        return render(request, 'reports/shared_view.html', {
+            'error': 'This share link has expired or been revoked.',
+            'share': share,
+        })
+
+    report = share.report
+    share.record_access()
+
+    try:
+        content_data = json.loads(report.content)
+    except (json.JSONDecodeError, TypeError):
+        content_data = {}
+
+    if isinstance(content_data, list):
+        content_data = {
+            'results': content_data,
+            'raw_data': '',
+            'executive_summary': '',
+            'methodology': [],
+            'recommendations': [],
+        }
+
+    can_download = share.permissions == 'download' and report.file
+
+    context = {
+        'share': share,
+        'report': report,
+        'content_data': content_data,
+        'experiments': report.experiments.all(),
+        'can_download': can_download,
+    }
+    return render(request, 'reports/shared_view.html', context)
