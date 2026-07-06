@@ -44,6 +44,8 @@ class Report(AuditableMixin, models.Model):
         ('pdf', 'PDF'),
         ('csv', 'CSV'),
         ('json', 'JSON'),
+        ('xlsx', 'Excel (XLSX)'),
+        ('zip', 'ZIP (All Formats)'),
     )
     
     title = models.CharField(max_length=200)

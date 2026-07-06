@@ -12,9 +12,21 @@
                 <i class="bi bi-arrow-left"></i> Back to Reports
             </a>
             {% if report.file %}
-            <a href="{% url 'reports:download' report.pk %}" class="btn btn-success">
-                <i class="bi bi-download"></i> Download Report
-            </a>
+            <div class="btn-group me-2">
+                <a href="{% url 'reports:download' report.pk %}" class="btn btn-success">
+                    <i class="bi bi-download"></i> Download {{ report.get_file_format_display }}
+                </a>
+                <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'reports:download' report.pk %}">
+                        <i class="bi bi-download"></i> Current Format ({{ report.get_file_format_display }})</a></li>
+                    <li><a class="dropdown-item" href="{% url 'reports:download_charts' report.pk %}">
+                        <i class="bi bi-bar-chart"></i> Download Charts (ZIP)</a></li>
+                </ul>
+            </div>
             {% endif %}
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#shareModal">
                 <i class="bi bi-share"></i> Share
