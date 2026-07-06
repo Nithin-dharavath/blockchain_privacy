@@ -147,14 +147,14 @@
 - [x] Templates: schedule list, form, detail with past runs
 
 ### 3.4 Report Templates
-- [ ] `ReportTemplate` model:
-  - [ ] `name`, `description`, `is_public` (BooleanField)
-  - [ ] `user` (FK User, nullable for system templates)
-  - [ ] `sections` (JSONField — which sections to include: summary, methodology, results, comparison, recommendations, raw)
-  - [ ] `layout` (JSONField — header text, footer text, colors, logo)
-- [ ] Users select a template when generating reports
-- [ ] System seed: 3 default templates ("Full Report", "Executive Summary", "Technical Deep Dive")
-- [ ] `python manage.py seed_report_templates` — load defaults
+- [x] `ReportTemplate` model:
+  - [x] `name`, `description`, `is_public` (BooleanField)
+  - [x] `user` (FK User, nullable for system templates)
+  - [x] `sections` (JSONField — which sections to include: summary, methodology, results, comparison, recommendations, raw)
+  - [x] `layout` (JSONField — header text, footer text, colors, logo)
+- [x] Users select a template when generating reports
+- [x] System seed: 3 default templates ("Full Report", "Executive Summary", "Technical Deep Dive")
+- [x] `python manage.py seed_report_templates` — load defaults
 
 ### 3.5 Report Sharing
 - [ ] `ReportShare` model:
@@ -176,12 +176,13 @@
 ### 3.7 Templates for Phase 3
 - [x] `reports/templates/reports/report_schedule_list.html`
 - [x] `reports/templates/reports/report_schedule_form.html`
-- [ ] `reports/templates/reports/report_template_list.html`
-- [ ] `reports/templates/reports/report_template_form.html`
+- [x] `reports/templates/reports/report_template_list.html`
+- [x] `reports/templates/reports/report_template_form.html`
 - [ ] `reports/templates/reports/share_report.html`
 - [ ] `reports/templates/reports/shared_view.html`
 - [ ] Update `report_detail.html` with proper section rendering
-- [ ] Update `report_generate.html` with template selection, scheduling option
+- [x] Update `report_generate.html` with template selection
+- [ ] Update `report_generate.html` with scheduling option
 
 ---
 

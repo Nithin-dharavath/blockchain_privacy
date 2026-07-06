@@ -5,6 +5,33 @@ from audit.mixins import AuditableMixin
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
+class ReportTemplate(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    is_public = models.BooleanField(default=False)
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL,
+        blank=True, null=True, related_name='report_templates'
+    )
+    sections = models.JSONField(
+        default=list,
+        help_text="Which sections to include: summary, methodology, results, comparison, recommendations, raw"
+    )
+    layout = models.JSONField(
+        default=dict,
+        help_text="Header text, footer text, colors, logo configuration"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'report_templates'
+        ordering = ['name']
+
+
 class Report(AuditableMixin, models.Model):
     REPORT_TYPE_CHOICES = (
         ('single', 'Single Experiment'),
@@ -29,6 +56,10 @@ class Report(AuditableMixin, models.Model):
     file_format = models.CharField(max_length=10, choices=FORMAT_CHOICES, default='pdf')
     file = models.FileField(upload_to='reports/', blank=True, null=True)
     
+    template = models.ForeignKey(
+        ReportTemplate, on_delete=models.SET_NULL,
+        blank=True, null=True, related_name='reports'
+    )
     schedule = models.ForeignKey(
         'ReportSchedule', on_delete=models.SET_NULL,
         blank=True, null=True, related_name='generated_reports'

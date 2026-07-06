@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import models
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-from .models import Report, ReportSchedule
-from .forms import ReportGenerationForm, ReportScheduleForm
+from .models import Report, ReportSchedule, ReportTemplate
+from .forms import ReportGenerationForm, ReportScheduleForm, ReportTemplateForm
 from experiments.models import Experiment
 import json
 import csv
@@ -53,6 +54,10 @@ def report_generate(request):
             
             report.save()
             form.save_m2m()
+            
+            # Apply template sections if a template was selected
+            if report.template and report.template.sections:
+                apply_template_to_report(report)
             
             # Generate file if needed
             if report.file_format == 'pdf':
@@ -260,6 +265,48 @@ def generate_report_summary(experiments):
     """
     
     return summary.strip()
+
+def apply_template_to_report(report):
+    """Filter report content sections based on template selection"""
+    import json
+    try:
+        content_data = json.loads(report.content)
+    except (json.JSONDecodeError, TypeError):
+        return
+
+    template = report.template
+    allowed_sections = set(template.sections)
+
+    section_key_map = {
+        'summary': 'executive_summary',
+        'methodology': 'methodology',
+        'results': 'results',
+        'comparison': 'comparison',
+        'recommendations': 'recommendations',
+        'raw': 'raw_data',
+    }
+
+    filtered = {}
+    for section_key, data_key in section_key_map.items():
+        if section_key in allowed_sections and data_key in content_data:
+            filtered[data_key] = content_data[data_key]
+
+    # Always include summary and raw for completeness, but nullify if not selected
+    filtered['executive_summary'] = filtered.get('executive_summary', content_data.get('executive_summary', ''))
+    filtered['raw_data'] = filtered.get('raw_data', content_data.get('raw_data', ''))
+
+    # Ensure empty values for non-selected sections don't show
+    for section_key, data_key in section_key_map.items():
+        if section_key not in allowed_sections:
+            filtered[data_key] = '' if data_key in ('executive_summary', 'raw_data') else []
+
+    # Apply layout from template
+    if template.layout:
+        filtered['_layout'] = template.layout
+
+    report.content = json.dumps(filtered, indent=2)
+    report.save(update_fields=['content'])
+
 
 def generate_report_file(report):
     """Generate downloadable report file"""
@@ -500,3 +547,86 @@ def schedule_delete(request, pk):
     schedule.delete()
     messages.success(request, f'Schedule "{name}" deleted successfully.')
     return redirect('reports:schedule_list')
+
+
+# ─── Report Template Views ────────────────────────────────────
+
+@login_required
+def template_list(request):
+    """List all report templates available to the user"""
+    templates = ReportTemplate.objects.filter(
+        models.Q(is_public=True) | models.Q(user=request.user)
+    ).order_by('-is_public', 'name')
+    paginator = Paginator(templates, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'page_obj': page_obj,
+        'templates': page_obj,
+    }
+    return render(request, 'reports/report_template_list.html', context)
+
+
+@login_required
+def template_create(request):
+    """Create a new report template"""
+    if request.method == 'POST':
+        form = ReportTemplateForm(request.POST)
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.user = request.user
+            template.save()
+            report_logger.info(
+                "Report template created: %s (user=%s)",
+                template.name, request.user.username,
+            )
+            messages.success(request, f'Template "{template.name}" created successfully.')
+            return redirect('reports:template_list')
+    else:
+        form = ReportTemplateForm()
+
+    context = {
+        'form': form,
+        'is_edit': False,
+    }
+    return render(request, 'reports/report_template_form.html', context)
+
+
+@login_required
+def template_edit(request, pk):
+    """Edit an existing report template"""
+    template = get_object_or_404(ReportTemplate, pk=pk)
+    # Only owner or superuser can edit
+    if template.user != request.user and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to edit this template.')
+        return redirect('reports:template_list')
+
+    if request.method == 'POST':
+        form = ReportTemplateForm(request.POST, instance=template)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Template "{template.name}" updated successfully.')
+            return redirect('reports:template_list')
+    else:
+        form = ReportTemplateForm(instance=template)
+
+    context = {
+        'form': form,
+        'is_edit': True,
+        'template': template,
+    }
+    return render(request, 'reports/report_template_form.html', context)
+
+
+@login_required
+@require_POST
+def template_delete(request, pk):
+    """Delete a report template"""
+    template = get_object_or_404(ReportTemplate, pk=pk)
+    if template.user != request.user and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to delete this template.')
+        return redirect('reports:template_list')
+    name = template.name
+    template.delete()
+    messages.success(request, f'Template "{name}" deleted successfully.')
+    return redirect('reports:template_list')

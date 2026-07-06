@@ -49,6 +49,12 @@
                                     <th>Experiments:</th>
                                     <td>{{ report.experiments.count }}</td>
                                 </tr>
+                                {% if report.template %}
+                                <tr>
+                                    <th>Template:</th>
+                                    <td><span class="badge bg-primary">{{ report.template.name }}</span></td>
+                                </tr>
+                                {% endif %}
                             </table>
                         </div>
                         <div class="col-md-6">
