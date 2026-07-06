@@ -736,9 +736,9 @@ def comparison_detail(request, pk):
             'is_fastest': data['execution_time'] == fastest_execution_time and fastest_execution_time > 0,
             'is_slowest': data['execution_time'] == max(d['execution_time'] for d in comparison_data) if comparison_data else False,
             'is_most_accurate': data['accuracy'] == best_accuracy and best_accuracy > 0,
-            'least_accurate': data['accuracy'] == min(d['accuracy'] for d in comparison_data) if comparison_data else False,
+            'is_least_accurate': data['accuracy'] == min(d['accuracy'] for d in comparison_data) if comparison_data else False,
             'is_highest_throughput': data['throughput'] == best_throughput and best_throughput > 0,
-            'lowest_throughput': data['throughput'] == min(d['throughput'] for d in comparison_data) if comparison_data else False,
+            'is_lowest_throughput': data['throughput'] == min(d['throughput'] for d in comparison_data) if comparison_data else False,
         })
     
     # Find best for privacy and performance

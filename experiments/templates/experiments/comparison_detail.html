@@ -34,9 +34,9 @@
     
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-table"></i> Comparison Table
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-table text-primary"></i> Comparison Table</h6>
                 </div>
                 <div class="card-body">
                     {% if comparison_data %}
@@ -74,12 +74,12 @@
                                     </td>
                                     <td>
                                         {% if data.is_most_accurate %}<span class="badge bg-success">Best</span>{% endif %}
-                                        {% if data.least_accurate %}<span class="badge bg-danger">Lowest</span>{% endif %}
+                                        {% if data.is_least_accurate %}<span class="badge bg-danger">Lowest</span>{% endif %}
                                         {% if data.accuracy is not None %}{{ data.accuracy|floatformat:4 }}{% else %}-{% endif %}
                                     </td>
                                     <td>
                                         {% if data.is_highest_throughput %}<span class="badge bg-success">Highest</span>{% endif %}
-                                        {% if data.lowest_throughput %}<span class="badge bg-danger">Lowest</span>{% endif %}
+                                        {% if data.is_lowest_throughput %}<span class="badge bg-danger">Lowest</span>{% endif %}
                                         {{ data.throughput|floatformat:2 }}
                                     </td>
                                     <td>{{ data.anonymity_set_size }}</td>
@@ -114,6 +114,14 @@
                                 <div class="metric-box">
                                     <div class="metric-value">{{ best_accuracy|floatformat:4 }}</div>
                                     <div class="metric-label">Best Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center mt-3">
+                            <div class="col-md-3 offset-md-3">
+                                <div class="metric-box">
+                                    <div class="metric-value">{{ best_throughput|floatformat:2 }} tps</div>
+                                    <div class="metric-label">Highest Throughput</div>
                                 </div>
                             </div>
                         </div>
@@ -157,29 +165,12 @@
     
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-graph-up"></i> Visualizations
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-graph-up text-primary"></i> Visualizations</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Radar Chart - Technique Comparison</h5>
-                            {% if radar_chart %}
-                            <img src="data:image/png;base64,{{ radar_chart }}" class="img-fluid rounded" alt="Radar Chart">
-                            {% else %}
-                            <p class="text-muted">No radar chart data available</p>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Grouped Bar Chart - Metric Comparison</h5>
-                            {% if comparison_chart %}
-                            <img src="data:image/png;base64,{{ comparison_chart }}" class="img-fluid rounded" alt="Comparison Chart">
-                            {% else %}
-                            <p class="text-muted">No comparison chart data available</p>
-                            {% endif %}
-                        </div>
-                    </div>
+                    {% include 'experiments/partials/_comparison_charts.html' %}
                 </div>
             </div>
         </div>
@@ -187,9 +178,9 @@
     
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-list"></i> Experiment Details with Score Breakdown
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-list text-primary"></i> Experiment Details with Score Breakdown</h6>
                 </div>
                 <div class="card-body">
                     {% if experiments %}
