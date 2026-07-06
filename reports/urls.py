@@ -21,4 +21,9 @@ urlpatterns = [
     path('templates/create/', views.template_create, name='template_create'),
     path('templates/<int:pk>/edit/', views.template_edit, name='template_edit'),
     path('templates/<int:pk>/delete/', views.template_delete, name='template_delete'),
+    # Report sharing
+    path('<int:pk>/share/', views.share_report, name='share_report'),
+    path('<int:pk>/shares/', views.manage_shares, name='manage_shares'),
+    path('<int:pk>/shares/<int:share_pk>/revoke/', views.revoke_share, name='revoke_share'),
+    path('shared/<uuid:token>/', views.shared_report_view, name='shared_view'),
 ]

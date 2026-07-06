@@ -157,30 +157,30 @@
 - [x] `python manage.py seed_report_templates` — load defaults
 
 ### 3.5 Report Sharing
-- [ ] `ReportShare` model:
-  - [ ] `report` (FK Report), `shared_by` (FK User)
-  - [ ] `shared_with_user` (FK User, nullable)
-  - [ ] `share_token` (UUIDField, unique — for anonymous links)
-  - [ ] `expires_at` (DateTimeField, nullable), `max_access_count` (IntegerField, nullable)
-  - [ ] `permissions` (choices: view_only, download)
-  - [ ] `last_accessed` (DateTimeField), `access_count` (IntegerField)
-- [ ] Share link generation: `/share/<token>/`
-- [ ] Views: share report (modal/form), manage shares, revoke share
-- [ ] Public view: token-based, no login required, shows report summary + download
+- [x] `ReportShare` model:
+  - [x] `report` (FK Report), `shared_by` (FK User)
+  - [x] `shared_with_user` (FK User, nullable)
+  - [x] `share_token` (UUIDField, unique — for anonymous links)
+  - [x] `expires_at` (DateTimeField, nullable), `max_access_count` (IntegerField, nullable)
+  - [x] `permissions` (choices: view_only, download)
+  - [x] `last_accessed` (DateTimeField), `access_count` (IntegerField)
+- [x] Share link generation: `/share/<token>/`
+- [x] Views: share report (modal/form), manage shares, revoke share
+- [x] Public view: token-based, no login required, shows report summary + download
 
 ### 3.6 Export Enhancements
 - [ ] Add XLSX export via `openpyxl` — multiple sheets (Summary, Details, Raw Data)
 - [ ] Add combined ZIP export — contains PDF + CSV + JSON together
 - [ ] Add chart export — generate and embed chart images in all formats
 
-### 3.7 Templates for Phase 3
+### 3.7 Templates for reporting overhaul
 - [x] `reports/templates/reports/report_schedule_list.html`
 - [x] `reports/templates/reports/report_schedule_form.html`
 - [x] `reports/templates/reports/report_template_list.html`
 - [x] `reports/templates/reports/report_template_form.html`
-- [ ] `reports/templates/reports/share_report.html`
-- [ ] `reports/templates/reports/shared_view.html`
-- [ ] Update `report_detail.html` with proper section rendering
+- [x] `reports/templates/reports/share_report.html`
+- [x] `reports/templates/reports/shared_view.html`
+- [x] Update `report_detail.html` with proper section rendering
 - [x] Update `report_generate.html` with template selection
 - [ ] Update `report_generate.html` with scheduling option
 
