@@ -169,9 +169,9 @@
 - [x] Public view: token-based, no login required, shows report summary + download
 
 ### 3.6 Export Enhancements
-- [ ] Add XLSX export via `openpyxl` — multiple sheets (Summary, Details, Raw Data)
-- [ ] Add combined ZIP export — contains PDF + CSV + JSON together
-- [ ] Add chart export — generate and embed chart images in all formats
+- [x] Add XLSX export via `openpyxl` — multiple sheets (Summary, Details, Raw Data)
+- [x] Add combined ZIP export — contains PDF + CSV + JSON together
+- [x] Add chart export — generate and embed chart images in all formats
 
 ### 3.7 Templates for reporting overhaul
 - [x] `reports/templates/reports/report_schedule_list.html`
@@ -182,7 +182,7 @@
 - [x] `reports/templates/reports/shared_view.html`
 - [x] Update `report_detail.html` with proper section rendering
 - [x] Update `report_generate.html` with template selection
-- [ ] Update `report_generate.html` with scheduling option
+- [x] Update `report_generate.html` with scheduling option
 
 ---
 

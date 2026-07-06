@@ -26,4 +26,6 @@ urlpatterns = [
     path('<int:pk>/shares/', views.manage_shares, name='manage_shares'),
     path('<int:pk>/shares/<int:share_pk>/revoke/', views.revoke_share, name='revoke_share'),
     path('shared/<uuid:token>/', views.shared_report_view, name='shared_view'),
+    # Chart export
+    path('<int:pk>/charts/', views.report_download_charts, name='download_charts'),
 ]

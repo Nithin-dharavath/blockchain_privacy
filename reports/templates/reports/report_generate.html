@@ -71,6 +71,19 @@
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> 
                             The report will include detailed metrics, comparison data, and visualizations for the selected experiments.
+                            <ul class="mb-0 mt-2">
+                                <li><strong>PDF</strong> — Professional report with cover page, charts, and formatting</li>
+                                <li><strong>XLSX</strong> — Multi-sheet Excel (Summary, Details, Raw Data)</li>
+                                <li><strong>ZIP</strong> — Combined archive containing PDF + CSV + JSON + chart images</li>
+                                <li><strong>CSV/JSON</strong> — Raw data export</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-calendar"></i> 
+                            <strong>Need recurring reports?</strong> 
+                            <a href="{% url 'reports:schedule_create' %}" class="alert-link">Set up a report schedule</a>
+                            to automatically generate reports daily, weekly, or monthly.
                         </div>
                         
                         <div class="d-grid gap-2">
