@@ -111,18 +111,18 @@
 **Goal**: From primitive JSON dumps to professional multi-format reports with scheduling, templates, and sharing.
 
 ### 3.1 PDF Report Generation
-- [ ] Add `reportlab` to `requirements.txt`
-- [ ] Implement `generate_pdf_report(report)`:
-  - [ ] Cover page: title, user, organization, date, report type
-  - [ ] Table of contents
-  - [ ] Executive summary section (natural language)
-  - [ ] Methodology section: technique descriptions, config params
-  - [ ] Results section: per-experiment detail pages with metrics tables
-  - [ ] Comparison section: side-by-side with charts
-  - [ ] Recommendations section: data-driven (best for privacy, best for performance)
-  - [ ] Raw data appendix
-  - [ ] Footer: page numbers, generation timestamp, platform branding
-- [ ] Integrate into `report_generate` flow — actually generate PDF when `file_format='pdf'`
+- [x] Add `reportlab` to `requirements.txt`
+- [x] Implement `generate_pdf_report(report)`:
+  - [x] Cover page: title, user, organization, date, report type
+  - [x] Table of contents
+  - [x] Executive summary section (natural language)
+  - [x] Methodology section: technique descriptions, config params
+  - [x] Results section: per-experiment detail pages with metrics tables
+  - [x] Comparison section: side-by-side with charts
+  - [x] Recommendations section: data-driven (best for privacy, best for performance)
+  - [x] Raw data appendix
+  - [x] Footer: page numbers, generation timestamp, platform branding
+- [x] Integrate into `report_generate` flow — actually generate PDF when `file_format='pdf'`
 
 ### 3.2 Enhanced Report Content
 - [ ] Restructure `Report.content` from flat JSON dump to structured sections:

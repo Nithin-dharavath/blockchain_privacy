@@ -10,6 +10,7 @@ import json
 import csv
 import logging
 from datetime import datetime
+from .pdf_generator import PDFReportGenerator
 
 report_logger = logging.getLogger('reports')
 
@@ -52,7 +53,9 @@ def report_generate(request):
             form.save_m2m()
             
             # Generate file if needed
-            if report.file_format in ['csv', 'json']:
+            if report.file_format == 'pdf':
+                PDFReportGenerator(report).generate()
+            elif report.file_format in ['csv', 'json']:
                 generate_report_file(report)
             
             report_logger.info(
@@ -209,6 +212,8 @@ def report_download(request, pk):
         content_type = 'text/csv'
     elif report.file_format == 'json':
         content_type = 'application/json'
+    elif report.file_format == 'pdf':
+        content_type = 'application/pdf'
     else:
         content_type = 'application/octet-stream'
     
