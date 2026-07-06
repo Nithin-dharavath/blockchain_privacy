@@ -1,0 +1,41 @@
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Date To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Technique</label>
+                <select name="technique" class="form-select">
+                    <option value="">All Techniques</option>
+                    {% for tech in all_techniques %}
+                    <option value="{{ tech.pk }}" {% if selected_technique == tech.pk|stringformat:"d" %}selected{% endif %}>
+                        {{ tech.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small">Dataset</label>
+                <select name="dataset" class="form-select">
+                    <option value="">All Datasets</option>
+                    {% for ds in all_datasets %}
+                    <option value="{{ ds.pk }}" {% if selected_dataset == ds.pk|stringformat:"d" %}selected{% endif %}>
+                        {{ ds.name|truncatewords:4 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

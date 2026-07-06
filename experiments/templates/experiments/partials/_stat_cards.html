@@ -1,0 +1,70 @@
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-flask text-primary fs-4"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Experiments</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_experiments }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-shield-check text-success fs-4"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Avg Privacy Score</div>
+                        <div class="fs-4 fw-bold">{{ stats.avg_privacy_score }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-bullseye text-info fs-4"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Avg Accuracy</div>
+                        <div class="fs-4 fw-bold">{{ stats.avg_accuracy }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-clock-history text-warning fs-4"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Compute Time</div>
+                        <div class="fs-4 fw-bold">{{ stats.total_compute_time }}s</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

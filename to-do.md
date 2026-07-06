@@ -61,12 +61,12 @@
 **Goal**: Transform bare metric tables into rich, interactive visualizations and dashboards.
 
 ### 2.1 Results Dashboard
-- [ ] New view + URL at `/experiments/results/`
-- [ ] Aggregate statistics cards: total experiments, avg privacy score, avg accuracy, total compute time
-- [ ] Privacy score trend line chart (by date of completion)
-- [ ] Technique comparison radar/spider chart (6 axes)
-- [ ] Success/failure pie chart by status
-- [ ] Filter bar: date range, technique type, dataset
+- [x] New view + URL at `/experiments/results/`
+- [x] Aggregate statistics cards: total experiments, avg privacy score, avg accuracy, total compute time
+- [x] Privacy score trend line chart (by date of completion)
+- [x] Technique comparison radar/spider chart (6 axes)
+- [x] Success/failure pie chart by status
+- [x] Filter bar: date range, technique type, dataset
 
 ### 2.2 Visualization Engine
 - [ ] Create `experiments/visualization.py`:
