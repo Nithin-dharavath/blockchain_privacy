@@ -1,13 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q, Sum, F, ExpressionWrapper, DurationField
+from django.db.models.functions import TruncDate, TruncMonth
 from django.core.paginator import Paginator
+from django.utils import timezone
 from accounts.models import User
 from datasets.models import Dataset
 from experiments.models import Experiment
 from privacy_tools.models import PrivacyTechnique
 from privacy_tools.forms import PrivacyTechniqueForm
+from datetime import timedelta
+import json
 
 def is_admin(user):
     """Check if user is admin"""
@@ -230,34 +234,364 @@ def toggle_technique(request, pk):
 @login_required
 @user_passes_test(is_admin)
 def system_reports(request):
-    """View system-wide reports"""
-    # Experiment statistics by technique
-    technique_performance = []
-    techniques = PrivacyTechnique.objects.all()
-    
-    for technique in techniques:
-        experiments = Experiment.objects.filter(
-            privacy_technique=technique,
-            status='completed'
+    """View enhanced system-wide reports with full analytics"""
+    now = timezone.now()
+    thirty_days_ago = now - timedelta(days=30)
+
+    # ── Time-series analysis ──────────────────────────────────────
+
+    # Experiment volume over time (daily, last 30 days)
+    volume_data = (
+        Experiment.objects
+        .filter(created_at__gte=thirty_days_ago)
+        .annotate(date=TruncDate('created_at'))
+        .values('date')
+        .annotate(count=Count('id'))
+        .order_by('date')
+    )
+    volume_labels = [str(v['date']) for v in volume_data]
+    volume_values = [v['count'] for v in volume_data]
+
+    # Success rate over time (daily, last 30 days based on completed_at)
+    daily_status = (
+        Experiment.objects
+        .filter(completed_at__gte=thirty_days_ago)
+        .annotate(date=TruncDate('completed_at'))
+        .values('date')
+        .annotate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(status='completed')),
+            failed=Count('id', filter=Q(status='failed')),
         )
-        
-        if experiments.exists():
-            stats = {
-                'technique': technique.name,
-                'total_experiments': experiments.count(),
-                'avg_privacy_score': experiments.aggregate(Avg('privacy_score'))['privacy_score__avg'] or 0,
-                'avg_execution_time': experiments.aggregate(Avg('execution_time'))['execution_time__avg'] or 0,
-                'avg_accuracy': experiments.aggregate(Avg('accuracy'))['accuracy__avg'] or 0,
-            }
-            technique_performance.append(stats)
-    
-    # User activity
-    user_activity = User.objects.annotate(
-        experiment_count=Count('experiments')
-    ).order_by('-experiment_count')[:10]
-    
+        .order_by('date')
+    )
+    success_labels = [str(d['date']) for d in daily_status]
+    success_rates = [
+        (d['completed'] / d['total'] * 100) if d['total'] > 0 else 0
+        for d in daily_status
+    ]
+
+    # Average scores over time (daily, last 30 days)
+    daily_scores = (
+        Experiment.objects
+        .filter(status='completed', completed_at__gte=thirty_days_ago)
+        .annotate(date=TruncDate('completed_at'))
+        .values('date')
+        .annotate(
+            avg_privacy=Avg('privacy_score'),
+            avg_accuracy=Avg('accuracy'),
+            avg_throughput=Avg('throughput'),
+        )
+        .order_by('date')
+    )
+    score_labels = [str(s['date']) for s in daily_scores]
+    avg_privacy_scores = [round(float(s['avg_privacy'] or 0), 2) for s in daily_scores]
+    avg_accuracy_scores = [round(float(s['avg_accuracy'] or 0) * 100, 1) for s in daily_scores]
+    avg_throughput_scores = [round(float(s['avg_throughput'] or 0), 2) for s in daily_scores]
+
+    # ── User analytics ────────────────────────────────────────────
+
+    # Active users per month (last 6 months)
+    six_months_ago = now - timedelta(days=180)
+    monthly_active = (
+        Experiment.objects
+        .filter(completed_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('completed_at'))
+        .values('month')
+        .annotate(active_users=Count('user', distinct=True))
+        .order_by('month')
+    )
+    active_labels = [str(m['month'])[:7] for m in monthly_active]
+    active_values = [m['active_users'] for m in monthly_active]
+
+    # New users per month (last 6 months)
+    new_users_monthly = (
+        User.objects
+        .filter(date_joined__gte=six_months_ago)
+        .annotate(month=TruncMonth('date_joined'))
+        .values('month')
+        .annotate(count=Count('id'))
+        .order_by('month')
+    )
+    new_user_labels = [str(m['month'])[:7] for m in new_users_monthly]
+    new_user_values = [m['count'] for m in new_users_monthly]
+
+    # Top 10 experimenters
+    top_experimenters = (
+        User.objects
+        .annotate(experiment_count=Count('experiments'))
+        .filter(experiment_count__gt=0)
+        .order_by('-experiment_count')[:10]
+    )
+
+    # User type distribution
+    user_type_dist = (
+        User.objects
+        .values('user_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    type_labels = [u['user_type'] for u in user_type_dist]
+    type_values = [u['count'] for u in user_type_dist]
+
+    # Experiments per user histogram (buckets)
+    user_exp_counts = (
+        User.objects
+        .annotate(exp_count=Count('experiments'))
+        .values_list('exp_count', flat=True)
+    )
+    histogram_buckets = {'0': 0, '1': 0, '2-5': 0, '6-10': 0, '11-20': 0, '20+': 0}
+    for ec in user_exp_counts:
+        if ec == 0:
+            histogram_buckets['0'] += 1
+        elif ec == 1:
+            histogram_buckets['1'] += 1
+        elif ec <= 5:
+            histogram_buckets['2-5'] += 1
+        elif ec <= 10:
+            histogram_buckets['6-10'] += 1
+        elif ec <= 20:
+            histogram_buckets['11-20'] += 1
+        else:
+            histogram_buckets['20+'] += 1
+
+    # ── Dataset analytics ─────────────────────────────────────────
+
+    # Approval rate
+    dataset_status_counts = (
+        Dataset.objects
+        .values('status')
+        .annotate(count=Count('id'))
+    )
+    ds_status_map = {s['status']: s['count'] for s in dataset_status_counts}
+
+    # Average approval time
+    approved_datasets = Dataset.objects.filter(
+        status='approved',
+        approved_at__isnull=False,
+    )
+    avg_approval_time = None
+    if approved_datasets.exists():
+        avg_approval = approved_datasets.annotate(
+            approval_duration=ExpressionWrapper(
+                F('approved_at') - F('created_at'),
+                output_field=DurationField()
+            )
+        ).aggregate(avg=Avg('approval_duration'))['avg']
+        if avg_approval:
+            avg_approval_time = round(avg_approval.total_seconds() / 3600, 1)
+
+    # Dataset type distribution
+    ds_type_dist = (
+        Dataset.objects
+        .values('dataset_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    ds_type_labels = [d['dataset_type'] for d in ds_type_dist]
+    ds_type_values = [d['count'] for d in ds_type_dist]
+
+    # Upload volume over time (monthly, last 6 months)
+    upload_volume = (
+        Dataset.objects
+        .filter(created_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(count=Count('id'))
+        .order_by('month')
+    )
+    upload_months = [str(u['month'])[:7] for u in upload_volume]
+    upload_counts = [u['count'] for u in upload_volume]
+
+    # ── Technique analytics ───────────────────────────────────────
+
+    all_techniques = PrivacyTechnique.objects.all()
+
+    # Usage frequency per technique
+    tech_usage = (
+        Experiment.objects
+        .values('privacy_technique__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    tech_usage_labels = [t['privacy_technique__name'] for t in tech_usage]
+    tech_usage_values = [t['count'] for t in tech_usage]
+
+    # Average performance per technique
+    tech_perf = (
+        Experiment.objects
+        .filter(status='completed')
+        .values('privacy_technique__name')
+        .annotate(
+            avg_privacy=Avg('privacy_score'),
+            avg_accuracy=Avg('accuracy'),
+            avg_throughput=Avg('throughput'),
+            avg_exec_time=Avg('execution_time'),
+            count=Count('id'),
+        )
+        .order_by('-avg_privacy')
+    )
+    tech_perf_labels = [t['privacy_technique__name'] for t in tech_perf]
+    tech_perf_privacy = [round(float(t['avg_privacy'] or 0), 2) for t in tech_perf]
+    tech_perf_accuracy = [round(float(t['avg_accuracy'] or 0) * 100, 1) for t in tech_perf]
+    tech_perf_throughput = [round(float(t['avg_throughput'] or 0), 2) for t in tech_perf]
+
+    # Success rate per technique
+    tech_totals = (
+        Experiment.objects
+        .values('privacy_technique_id')
+        .annotate(total=Count('id'))
+    )
+    tech_completed = (
+        Experiment.objects
+        .filter(status='completed')
+        .values('privacy_technique_id')
+        .annotate(completed=Count('id'))
+    )
+    tech_failed = (
+        Experiment.objects
+        .filter(status='failed')
+        .values('privacy_technique_id')
+        .annotate(failed=Count('id'))
+    )
+    tech_total_map = {t['privacy_technique_id']: t['total'] for t in tech_totals}
+    tech_completed_map = {t['privacy_technique_id']: t['completed'] for t in tech_completed}
+    tech_failed_map = {t['privacy_technique_id']: t['failed'] for t in tech_failed}
+
+    tech_success_rates = []
+    for tech in all_techniques:
+        total = tech_total_map.get(tech.pk, 0)
+        completed = tech_completed_map.get(tech.pk, 0)
+        if total > 0:
+            tech_success_rates.append({
+                'name': tech.name,
+                'total': total,
+                'completed': completed,
+                'failed': tech_failed_map.get(tech.pk, 0),
+                'success_rate': round(completed / total * 100, 1),
+            })
+
+    # ── System health ─────────────────────────────────────────────
+
+    # Failure rate over time (monthly, last 6 months)
+    monthly_failures = (
+        Experiment.objects
+        .filter(completed_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('completed_at'))
+        .values('month')
+        .annotate(
+            total=Count('id'),
+            failed=Count('id', filter=Q(status='failed')),
+        )
+        .order_by('month')
+    )
+    health_labels = [str(h['month'])[:7] for h in monthly_failures]
+    failure_rates = [
+        round(h['failed'] / h['total'] * 100, 1) if h['total'] > 0 else 0
+        for h in monthly_failures
+    ]
+    monthly_volumes = [h['total'] for h in monthly_failures]
+
+    # Average execution time trend (monthly, last 6 months)
+    monthly_exec = (
+        Experiment.objects
+        .filter(status='completed', completed_at__gte=six_months_ago)
+        .annotate(month=TruncMonth('completed_at'))
+        .values('month')
+        .annotate(avg_time=Avg('execution_time'))
+        .order_by('month')
+    )
+    exec_month_labels = [str(e['month'])[:7] for e in monthly_exec]
+    exec_times = [round(float(e['avg_time'] or 0), 2) for e in monthly_exec]
+
+    # Most common error messages
+    common_errors = (
+        Experiment.objects
+        .filter(error_message__isnull=False)
+        .exclude(error_message__exact='')
+        .values('error_message')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:10]
+    )
+
+    # ── Aggregate stats ──────────────────────────────────────────
+
+    total_experiments = Experiment.objects.count()
+    total_users = User.objects.count()
+    total_datasets = Dataset.objects.count()
+    total_techniques = all_techniques.count()
+    avg_privacy = (
+        Experiment.objects
+        .filter(status='completed')
+        .aggregate(avg=Avg('privacy_score'))['avg'] or 0
+    )
+    avg_accuracy = (
+        Experiment.objects
+        .filter(status='completed')
+        .aggregate(avg=Avg('accuracy'))['avg'] or 0
+    ) * 100
+    total_exec_time = (
+        Experiment.objects
+        .filter(status='completed')
+        .aggregate(total=Sum('execution_time'))['total'] or 0
+    )
+
     context = {
-        'technique_performance': technique_performance,
-        'user_activity': user_activity
+        # Aggregate
+        'total_experiments': total_experiments,
+        'total_users': total_users,
+        'total_datasets': total_datasets,
+        'total_techniques': total_techniques,
+        'overall_avg_privacy': round(avg_privacy, 2),
+        'overall_avg_accuracy': round(avg_accuracy, 1),
+        'total_exec_time': round(total_exec_time, 2),
+
+        # Time-series
+        'volume_labels': json.dumps(volume_labels),
+        'volume_values': json.dumps(volume_values),
+        'success_labels': json.dumps(success_labels),
+        'success_rates': json.dumps(success_rates),
+        'score_labels': json.dumps(score_labels),
+        'avg_privacy_scores': json.dumps(avg_privacy_scores),
+        'avg_accuracy_scores': json.dumps(avg_accuracy_scores),
+        'avg_throughput_scores': json.dumps(avg_throughput_scores),
+
+        # User analytics
+        'active_labels': json.dumps(active_labels),
+        'active_values': json.dumps(active_values),
+        'new_user_labels': json.dumps(new_user_labels),
+        'new_user_values': json.dumps(new_user_values),
+        'top_experimenters': top_experimenters,
+        'type_labels': json.dumps(type_labels),
+        'type_values': json.dumps(type_values),
+        'histogram_labels': json.dumps(list(histogram_buckets.keys())),
+        'histogram_values': json.dumps(list(histogram_buckets.values())),
+
+        # Dataset analytics
+        'ds_approved': ds_status_map.get('approved', 0),
+        'ds_rejected': ds_status_map.get('rejected', 0),
+        'ds_pending': ds_status_map.get('pending', 0),
+        'avg_approval_time': avg_approval_time,
+        'ds_type_labels': json.dumps(ds_type_labels),
+        'ds_type_values': json.dumps(ds_type_values),
+        'upload_months': json.dumps(upload_months),
+        'upload_counts': json.dumps(upload_counts),
+
+        # Technique analytics
+        'tech_usage_labels': json.dumps(tech_usage_labels),
+        'tech_usage_values': json.dumps(tech_usage_values),
+        'tech_perf_labels': json.dumps(tech_perf_labels),
+        'tech_perf_privacy': json.dumps(tech_perf_privacy),
+        'tech_perf_accuracy': json.dumps(tech_perf_accuracy),
+        'tech_perf_throughput': json.dumps(tech_perf_throughput),
+        'tech_success_rates': tech_success_rates,
+
+        # System health
+        'health_labels': json.dumps(health_labels),
+        'failure_rates': json.dumps(failure_rates),
+        'monthly_volumes': json.dumps(monthly_volumes),
+        'exec_month_labels': json.dumps(exec_month_labels),
+        'exec_times': json.dumps(exec_times),
+        'common_errors': common_errors,
     }
     return render(request, 'admin_panel/system_reports.html', context)

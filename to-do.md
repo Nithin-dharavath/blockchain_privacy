@@ -191,28 +191,28 @@
 **Goal**: Turn the minimal admin panel into a full operations dashboard.
 
 ### 4.1 Enhanced System Reports
-- [ ] **Time-series analysis**:
-  - [ ] Experiment volume over time (daily/weekly/monthly buckets)
-  - [ ] Success rate over time line chart
-  - [ ] Average scores over time trend
-- [ ] **User analytics**:
-  - [ ] Active users / new users per month (bar chart)
-  - [ ] Top 10 experimenters (leaderboard table)
-  - [ ] User type distribution (pie chart)
-  - [ ] Experiments per user histogram
-- [ ] **Dataset analytics**:
-  - [ ] Approval rate (approved vs rejected pie)
-  - [ ] Average approval time (hours/days)
-  - [ ] Dataset type distribution (bar chart)
-  - [ ] Upload volume over time
-- [ ] **Technique analytics**:
-  - [ ] Usage frequency per technique (bar chart)
-  - [ ] Average performance comparison (grouped bar: privacy_score, accuracy, throughput)
-  - [ ] Success rate per technique
-- [ ] **System health**:
-  - [ ] Experiment failure rate over time
-  - [ ] Average execution time trend
-  - [ ] Most common error messages (word cloud or frequency table)
+- [x] **Time-series analysis**:
+  - [x] Experiment volume over time (daily/weekly/monthly buckets)
+  - [x] Success rate over time line chart
+  - [x] Average scores over time trend
+- [x] **User analytics**:
+  - [x] Active users / new users per month (bar chart)
+  - [x] Top 10 experimenters (leaderboard table)
+  - [x] User type distribution (pie chart)
+  - [x] Experiments per user histogram
+- [x] **Dataset analytics**:
+  - [x] Approval rate (approved vs rejected pie)
+  - [x] Average approval time (hours/days)
+  - [x] Dataset type distribution (bar chart)
+  - [x] Upload volume over time
+- [x] **Technique analytics**:
+  - [x] Usage frequency per technique (bar chart)
+  - [x] Average performance comparison (grouped bar: privacy_score, accuracy, throughput)
+  - [x] Success rate per technique
+- [x] **System health**:
+  - [x] Experiment failure rate over time
+  - [x] Average execution time trend
+  - [x] Most common error messages (word cloud or frequency table)
 
 ### 4.2 Admin Audit Viewer
 - [ ] New view at `/admin-panel/audit/`:
