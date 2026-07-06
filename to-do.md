@@ -125,14 +125,14 @@
 - [x] Integrate into `report_generate` flow — actually generate PDF when `file_format='pdf'`
 
 ### 3.2 Enhanced Report Content
-- [ ] Restructure `Report.content` from flat JSON dump to structured sections:
-  - [ ] `executive_summary` (generated from summary logic)
-  - [ ] `methodology` (technique descriptions with links)
-  - [ ] `results` (per-experiment with all metrics)
-  - [ ] `comparison` (side-by-side with rankings)
-  - [ ] `recommendations` (data-driven)
-  - [ ] `raw_data` (embedded CSV)
-- [ ] Update `generate_report_content()` to produce structured dict
+- [x] Restructure `Report.content` from flat JSON dump to structured sections:
+  - [x] `executive_summary` (generated from summary logic)
+  - [x] `methodology` (technique descriptions with links)
+  - [x] `results` (per-experiment with all metrics)
+  - [x] `comparison` (side-by-side with rankings)
+  - [x] `recommendations` (data-driven)
+  - [x] `raw_data` (embedded CSV)
+- [x] Update `generate_report_content()` to produce structured dict
 
 ### 3.3 Report Scheduling
 - [ ] `ReportSchedule` model:
