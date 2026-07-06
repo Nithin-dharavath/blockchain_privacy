@@ -78,11 +78,37 @@ def report_generate(request):
     return render(request, 'reports/report_generate.html', context)
 
 def generate_report_content(experiments, report_type):
-    """Generate report content based on experiments"""
-    content = []
+    """Generate structured report content based on experiments"""
+    sections = {}
     
+    # 1. Executive Summary
+    sections['executive_summary'] = generate_report_summary(experiments)
+    
+    # 2. Methodology
+    technique_groups = {}
+    for exp in experiments:
+        tech = exp.privacy_technique
+        tech_name = tech.name
+        if tech_name not in technique_groups:
+            technique_groups[tech_name] = {
+                'name': tech.name,
+                'type': tech.get_technique_type_display(),
+                'security_level': tech.security_level,
+                'complexity': tech.complexity,
+                'description': tech.description,
+                'algorithm_details': tech.algorithm_details,
+                'parameters': tech.parameters,
+                'experiment_count': 0,
+            }
+        technique_groups[tech_name]['experiment_count'] += 1
+    
+    sections['methodology'] = list(technique_groups.values())
+    
+    # 3. Results (per-experiment with all metrics)
+    results = []
     for exp in experiments:
         exp_data = {
+            'id': exp.id,
             'name': exp.name,
             'technique': exp.privacy_technique.name,
             'dataset': exp.dataset.name,
@@ -93,12 +119,122 @@ def generate_report_content(experiments, report_type):
             'throughput': exp.throughput,
             'anonymity_set_size': exp.anonymity_set_size,
             'metrics': exp.metrics,
+            'configuration': exp.configuration,
             'created_at': exp.created_at.isoformat(),
-            'completed_at': exp.completed_at.isoformat() if exp.completed_at else None
+            'completed_at': exp.completed_at.isoformat() if exp.completed_at else None,
+            'error_message': exp.error_message if exp.status == 'failed' else None,
         }
-        content.append(exp_data)
+        results.append(exp_data)
+    sections['results'] = results
     
-    return json.dumps(content, indent=2)
+    # 4. Comparison (side-by-side with rankings) – only for multi-experiment reports
+    if len(experiments) > 1:
+        # Ranking by privacy score (descending)
+        ranked = sorted(experiments, key=lambda e: e.privacy_score or 0, reverse=True)
+        ranking = []
+        for i, exp in enumerate(ranked, 1):
+            ranking.append({
+                'rank': i,
+                'experiment_id': exp.id,
+                'name': exp.name,
+                'technique': exp.privacy_technique.name,
+                'privacy_score': exp.privacy_score,
+                'accuracy': exp.accuracy,
+                'throughput': exp.throughput,
+                'execution_time': exp.execution_time,
+            })
+        sections['comparison'] = {
+            'ranking': ranking,
+            'best_privacy': ranked[0].id if ranked else None,
+            'fastest': min(experiments, key=lambda e: e.execution_time or float('inf')).id if experiments else None,
+            'best_accuracy': max(experiments, key=lambda e: e.accuracy or 0).id if experiments else None,
+            'best_throughput': max(experiments, key=lambda e: e.throughput or 0).id if experiments else None,
+        }
+    
+    # 5. Recommendations (data-driven)
+    recommendations = []
+    if experiments:
+        # Best for privacy
+        best_privacy = max(
+            [e for e in experiments if e.privacy_score is not None],
+            key=lambda e: e.privacy_score,
+            default=None
+        )
+        if best_privacy:
+            recommendations.append({
+                'title': 'Best for Privacy',
+                'experiment_id': best_privacy.id,
+                'experiment_name': best_privacy.name,
+                'technique': best_privacy.privacy_technique.name,
+                'value': f"Privacy Score: {best_privacy.privacy_score:.2f}",
+            })
+        # Best for performance (throughput)
+        best_perf = max(
+            [e for e in experiments if e.throughput is not None],
+            key=lambda e: e.throughput,
+            default=None
+        )
+        if best_perf:
+            recommendations.append({
+                'title': 'Best for Performance',
+                'experiment_id': best_perf.id,
+                'experiment_name': best_perf.name,
+                'technique': best_perf.privacy_technique.name,
+                'value': f"Throughput: {best_perf.throughput:.2f} tps",
+            })
+        # Fastest
+        fastest = min(
+            [e for e in experiments if e.execution_time is not None],
+            key=lambda e: e.execution_time,
+            default=None
+        )
+        if fastest:
+            recommendations.append({
+                'title': 'Fastest Execution',
+                'experiment_id': fastest.id,
+                'experiment_name': fastest.name,
+                'technique': fastest.privacy_technique.name,
+                'value': f"Time: {fastest.execution_time:.3f}s",
+            })
+        # Best accuracy
+        best_accuracy = max(
+            [e for e in experiments if e.accuracy is not None],
+            key=lambda e: e.accuracy,
+            default=None
+        )
+        if best_accuracy:
+            recommendations.append({
+                'title': 'Best Accuracy',
+                'experiment_id': best_accuracy.id,
+                'experiment_name': best_accuracy.name,
+                'technique': best_accuracy.privacy_technique.name,
+                'value': f"Accuracy: {best_accuracy.accuracy*100:.2f}%",
+            })
+    sections['recommendations'] = recommendations
+    
+    # 6. Raw Data (embedded CSV)
+    if experiments:
+        output = io.StringIO()
+        fieldnames = ['name', 'technique', 'dataset', 'privacy_score', 
+                     'execution_time', 'accuracy', 'throughput', 'anonymity_set_size']
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        for exp in experiments:
+            writer.writerow({
+                'name': exp.name,
+                'technique': exp.privacy_technique.name,
+                'dataset': exp.dataset.name,
+                'privacy_score': exp.privacy_score or 0,
+                'execution_time': exp.execution_time or 0,
+                'accuracy': exp.accuracy or 0,
+                'throughput': exp.throughput or 0,
+                'anonymity_set_size': exp.anonymity_set_size or 0,
+            })
+        sections['raw_data'] = output.getvalue()
+    else:
+        sections['raw_data'] = ''
+    
+    return json.dumps(sections, indent=2)
 
 def generate_report_summary(experiments):
     """Generate summary statistics"""
@@ -183,8 +319,18 @@ def report_detail(request, pk):
     # Parse content
     try:
         content_data = json.loads(report.content)
-    except:
-        content_data = []
+    except (json.JSONDecodeError, TypeError):
+        content_data = {}
+    
+    # Backward compatibility: if content_data is a list (old format), wrap in new structure
+    if isinstance(content_data, list):
+        content_data = {
+            'results': content_data,
+            'raw_data': '',
+            'executive_summary': '',
+            'methodology': [],
+            'recommendations': [],
+        }
     
     context = {
         'report': report,

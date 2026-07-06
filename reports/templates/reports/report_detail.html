@@ -108,18 +108,176 @@
     </div>
     
     {% if content_data %}
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <i class="bi bi-code-square"></i> Report Data
+                    <i class="bi bi-file-text"></i> Executive Summary
                 </div>
                 <div class="card-body">
-                    <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">{{ content_data|safe }}</pre>
+                    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ content_data.executive_summary }}</pre>
                 </div>
             </div>
         </div>
     </div>
+
+    {% if content_data.methodology %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-gear"></i> Methodology
+                </div>
+                <div class="card-body">
+                    {% for tech in content_data.methodology %}
+                    <div class="mb-3">
+                        <h5>{{ tech.name }} <small class="text-muted">({{ tech.type }})</small></h5>
+                        <p><strong>Security Level:</strong> {{ tech.security_level }}/10 | <strong>Complexity:</strong> {{ tech.complexity|default:"N/A" }}</p>
+                        <p>{{ tech.description }}</p>
+                        <p><strong>Algorithm:</strong> {{ tech.algorithm_details }}</p>
+                        {% if tech.parameters %}
+                        <p><strong>Parameters:</strong></p>
+                        <pre class="bg-light p-2 rounded">{{ tech.parameters }}</pre>
+                        {% endif %}
+                        <p class="text-muted">Used in {{ tech.experiment_count }} experiment(s)</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if content_data.results %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart"></i> Detailed Results
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Experiment</th>
+                                    <th>Technique</th>
+                                    <th>Dataset</th>
+                                    <th>Status</th>
+                                    <th>Privacy Score</th>
+                                    <th>Accuracy</th>
+                                    <th>Throughput</th>
+                                    <th>Time (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in content_data.results %}
+                                <tr>
+                                    <td>{{ exp.name }}</td>
+                                    <td><span class="badge bg-primary">{{ exp.technique }}</span></td>
+                                    <td>{{ exp.dataset }}</td>
+                                    <td>
+                                        {% if exp.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif exp.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ exp.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ exp.privacy_score|floatformat:2|default:"N/A" }}</td>
+                                    <td>{{ exp.accuracy|floatformat:4|default:"N/A" }}</td>
+                                    <td>{{ exp.throughput|floatformat:2|default:"N/A" }}</td>
+                                    <td>{{ exp.execution_time|floatformat:3|default:"N/A" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if content_data.comparison %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart-line"></i> Comparison Analysis
+                </div>
+                <div class="card-body">
+                    <h5>Rankings by Privacy Score</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Experiment</th>
+                                    <th>Technique</th>
+                                    <th>Privacy Score</th>
+                                    <th>Accuracy</th>
+                                    <th>Throughput</th>
+                                    <th>Time (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in content_data.comparison.ranking %}
+                                <tr>
+                                    <td>{{ item.rank }}</td>
+                                    <td>{{ item.name }}</td>
+                                    <td><span class="badge bg-primary">{{ item.technique }}</span></td>
+                                    <td>{{ item.privacy_score|floatformat:2|default:"N/A" }}</td>
+                                    <td>{{ item.accuracy|floatformat:4|default:"N/A" }}</td>
+                                    <td>{{ item.throughput|floatformat:2|default:"N/A" }}</td>
+                                    <td>{{ item.execution_time|floatformat:3|default:"N/A" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if content_data.recommendations %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightbulb"></i> Recommendations
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for rec in content_data.recommendations %}
+                        <li class="list-group-item">
+                            <strong>{{ rec.title }}:</strong> {{ rec.experiment_name }} ({{ rec.technique }}) — {{ rec.value }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if content_data.raw_data %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-filetype-csv"></i> Raw Data (CSV)
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">{{ content_data.raw_data }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}
