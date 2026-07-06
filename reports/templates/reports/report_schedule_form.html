@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit{% else %}Create{% endif %} Schedule - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4>
+                        <i class="bi bi-clock-history"></i>
+                        {% if is_edit %}Edit Schedule{% else %}Create Schedule{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Schedule Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_report_type" class="form-label">Report Type *</label>
+                                {{ form.report_type }}
+                                {% if form.report_type.errors %}
+                                    <div class="text-danger">{{ form.report_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_file_format" class="form-label">File Format *</label>
+                                {{ form.file_format }}
+                                {% if form.file_format.errors %}
+                                    <div class="text-danger">{{ form.file_format.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_schedule_frequency" class="form-label">Frequency *</label>
+                                {{ form.schedule_frequency }}
+                                {% if form.schedule_frequency.errors %}
+                                    <div class="text-danger">{{ form.schedule_frequency.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_schedule_day" class="form-label">Schedule Day</label>
+                            {{ form.schedule_day }}
+                            <div class="form-text">
+                                For weekly: 0=Monday through 6=Sunday. For monthly: 1-31 (day of month). Leave blank for daily.
+                            </div>
+                            {% if form.schedule_day.errors %}
+                                <div class="text-danger">{{ form.schedule_day.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_experiments" class="form-label">Experiments</label>
+                            <small class="text-muted">(Hold Ctrl/Cmd to select multiple)</small>
+                            {{ form.experiments }}
+                            {% if form.experiments.errors %}
+                                <div class="text-danger">{{ form.experiments.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Leave empty to use filter criteria (coming soon).</div>
+                            {% if not completed_experiments %}
+                            <div class="alert alert-warning mt-2">
+                                <i class="bi bi-exclamation-triangle"></i> No completed experiments available.
+                                <a href="{% url 'experiments:create' %}">Run some experiments first</a>.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="id_is_active">Active</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.auto_generate }}
+                                    <label class="form-check-label" for="id_auto_generate">Auto-generate on schedule</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i>
+                                {% if is_edit %}Update Schedule{% else %}Create Schedule{% endif %}
+                            </button>
+                            <a href="{% url 'reports:schedule_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
