@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Avg, Sum, Count
 from django.utils import timezone
 from .models import Experiment, ExperimentComparison
 from .forms import ExperimentForm, ExperimentComparisonForm
@@ -46,6 +47,107 @@ def experiment_list(request):
         'status_filter': status_filter
     }
     return render(request, 'experiments/experiment_list.html', context)
+
+@login_required
+def results_dashboard(request):
+    qs = Experiment.objects.filter(user=request.user)
+
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    technique_id = request.GET.get('technique')
+    dataset_id = request.GET.get('dataset')
+
+    if date_from:
+        qs = qs.filter(completed_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(completed_at__date__lte=date_to)
+    if technique_id:
+        qs = qs.filter(privacy_technique_id=technique_id)
+    if dataset_id:
+        qs = qs.filter(dataset_id=dataset_id)
+
+    completed = qs.filter(status='completed')
+    stats = {
+        'total_experiments': qs.count(),
+        'completed_count': completed.count(),
+        'failed_count': qs.filter(status='failed').count(),
+        'avg_privacy_score': round(completed.aggregate(avg=Avg('privacy_score'))['avg'] or 0, 2),
+        'avg_accuracy': round((completed.aggregate(avg=Avg('accuracy'))['avg'] or 0) * 100, 1),
+        'total_compute_time': round(completed.aggregate(total=Sum('execution_time'))['total'] or 0, 2),
+    }
+
+    trend_data = (
+        completed
+        .filter(completed_at__isnull=False)
+        .order_by('completed_at')
+        .values_list('completed_at__date', 'privacy_score')
+    )
+    trend_labels = [str(d) for d, _ in trend_data]
+    trend_values = [round(s, 2) if s else 0 for _, s in trend_data]
+
+    techniques = PrivacyTechnique.objects.filter(
+        experiments__in=completed
+    ).distinct()
+    radar_axes = ['Privacy', 'Accuracy', 'Throughput', 'Speed', 'Anonymity', 'Security']
+    radar_datasets = []
+    colors = [
+        ('139, 92, 246', '0.7'),
+        ('236, 72, 153', '0.7'),
+        ('20, 184, 166', '0.7'),
+        ('249, 115, 22', '0.7'),
+        ('59, 130, 246', '0.7'),
+    ]
+    for idx, tech in enumerate(techniques):
+        tech_exps = completed.filter(privacy_technique=tech)
+        avg_privacy = round(tech_exps.aggregate(avg=Avg('privacy_score'))['avg'] or 0, 2)
+        avg_accuracy = round((tech_exps.aggregate(avg=Avg('accuracy'))['avg'] or 0) * 100, 2)
+        avg_throughput = round(tech_exps.aggregate(avg=Avg('throughput'))['avg'] or 0, 2)
+        avg_exec = tech_exps.aggregate(avg=Avg('execution_time'))['avg'] or 0
+        speed_score = round(max(0, 100 - min(avg_exec * 10, 100)), 2)
+        avg_anon = round(tech_exps.aggregate(avg=Avg('anonymity_set_size'))['avg'] or 0, 2)
+        security = round(tech.security_level * 10, 2)
+        color = colors[idx % len(colors)]
+        radar_datasets.append({
+            'label': tech.name,
+            'data': [avg_privacy, avg_accuracy, avg_throughput, speed_score, avg_anon, security],
+            'borderColor': f'rgba({color[0]}, 1)',
+            'backgroundColor': f'rgba({color[0]}, {color[1]})',
+        })
+
+    status_counts = qs.values('status').annotate(count=Count('id')).order_by('status')
+    pie_labels = [s['status'].title() for s in status_counts]
+    pie_values = [s['count'] for s in status_counts]
+    pie_colors = []
+    for s in [sc['status'] for sc in status_counts]:
+        if s == 'completed':
+            pie_colors.append("'rgba(16, 185, 129, 0.8)'")
+        elif s == 'failed':
+            pie_colors.append("'rgba(239, 68, 68, 0.8)'")
+        elif s == 'running':
+            pie_colors.append("'rgba(245, 158, 11, 0.8)'")
+        else:
+            pie_colors.append("'rgba(148, 163, 184, 0.8)'")
+
+    all_techniques = PrivacyTechnique.objects.filter(is_active=True)
+    all_datasets = Dataset.objects.filter(uploaded_by=request.user, status='approved')
+
+    context = {
+        'stats': stats,
+        'trend_labels': json.dumps(trend_labels),
+        'trend_values': json.dumps(trend_values),
+        'radar_labels': json.dumps(radar_axes),
+        'radar_datasets': json.dumps(radar_datasets),
+        'pie_labels': json.dumps(pie_labels),
+        'pie_values': json.dumps(pie_values),
+        'pie_colors': json.dumps(pie_colors),
+        'all_techniques': all_techniques,
+        'all_datasets': all_datasets,
+        'selected_technique': technique_id or '',
+        'selected_dataset': dataset_id or '',
+        'date_from': date_from or '',
+        'date_to': date_to or '',
+    }
+    return render(request, 'experiments/results_dashboard.html', context)
 
 @login_required
 def experiment_create(request):
