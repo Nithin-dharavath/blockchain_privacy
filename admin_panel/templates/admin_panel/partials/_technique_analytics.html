@@ -1,0 +1,134 @@
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="mb-0"><i class="bi bi-bar-chart text-primary"></i> Technique Usage Frequency</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="techUsageChart" height="160"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="mb-0"><i class="bi bi-bar-chart-steps text-success"></i> Average Performance by Technique</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="techPerfChart" height="160"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="mb-0"><i class="bi bi-table text-info"></i> Success Rate per Technique</h6>
+            </div>
+            <div class="card-body">
+                {% if tech_success_rates %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Technique</th>
+                                <th>Total Experiments</th>
+                                <th>Completed</th>
+                                <th>Failed</th>
+                                <th>Success Rate</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in tech_success_rates %}
+                            <tr>
+                                <td><strong>{{ item.name }}</strong></td>
+                                <td>{{ item.total }}</td>
+                                <td><span class="text-success">{{ item.completed }}</span></td>
+                                <td><span class="text-danger">{{ item.failed }}</span></td>
+                                <td>
+                                    <span class="badge {% if item.success_rate >= 80 %}bg-success{% elif item.success_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ item.success_rate }}%
+                                    </span>
+                                </td>
+                                <td style="width: 200px;">
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.success_rate }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No technique experiment data yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var techUsageLabels = {{ tech_usage_labels|safe }};
+    var techUsageValues = {{ tech_usage_values|safe }};
+    var techPerfLabels = {{ tech_perf_labels|safe }};
+    var techPerfPrivacy = {{ tech_perf_privacy|safe }};
+    var techPerfAccuracy = {{ tech_perf_accuracy|safe }};
+    var techPerfThroughput = {{ tech_perf_throughput|safe }};
+
+    if (techUsageLabels.length) {
+        var usageColors = ['rgba(139, 92, 246, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(20, 184, 166, 0.7)', 'rgba(249, 115, 22, 0.7)', 'rgba(59, 130, 246, 0.7)'];
+        new Chart(document.getElementById('techUsageChart'), {
+            type: 'bar',
+            data: {
+                labels: techUsageLabels,
+                datasets: [{
+                    label: 'Experiments',
+                    data: techUsageValues,
+                    backgroundColor: usageColors.slice(0, techUsageLabels.length),
+                    borderColor: usageColors.slice(0, techUsageLabels.length).map(c => c.replace('0.7', '1')),
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { stepSize: 1 } },
+                    y: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    if (techPerfLabels.length) {
+        new Chart(document.getElementById('techPerfChart'), {
+            type: 'bar',
+            data: {
+                labels: techPerfLabels,
+                datasets: [
+                    { label: 'Avg Privacy', data: techPerfPrivacy, backgroundColor: 'rgba(139, 92, 246, 0.7)', borderColor: 'rgba(139, 92, 246, 1)', borderWidth: 1, borderRadius: 4 },
+                    { label: 'Avg Accuracy (%)', data: techPerfAccuracy, backgroundColor: 'rgba(236, 72, 153, 0.7)', borderColor: 'rgba(236, 72, 153, 1)', borderWidth: 1, borderRadius: 4 },
+                    { label: 'Avg Throughput', data: techPerfThroughput, backgroundColor: 'rgba(20, 184, 166, 0.7)', borderColor: 'rgba(20, 184, 166, 1)', borderWidth: 1, borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { boxWidth: 12, font: { size: 10 } } } },
+                scales: {
+                    x: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { font: { size: 10 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.08)' } }
+                }
+            }
+        });
+    }
+});
+</script>

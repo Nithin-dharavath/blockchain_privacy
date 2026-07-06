@@ -1,51 +1,412 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}System Reports{% endblock %}
+{% block title %}Enhanced System Reports - Privacy Platform{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col">
-            <h2><i class="bi bi-graph-up"></i> System Reports</h2>
+            <h2><i class="bi bi-graph-up"></i> Enhanced System Reports</h2>
+            <p class="text-muted">Comprehensive platform analytics with time-series, user, dataset, technique, and health metrics.</p>
         </div>
     </div>
-    
+
+    {% if total_experiments == 0 and total_users == 0 %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-graph-up" style="font-size: 4rem; color: #475569;"></i>
+            <h4 class="mt-3">No Data Available</h4>
+            <p class="text-muted">Reports will populate once users start running experiments.</p>
+            <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-primary">
+                <i class="bi bi-speedometer2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Overview Cards -->
     <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">Technique Performance</div>
+        <div class="col-md-2 mb-3">
+            <div class="card stat-card info border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-flask text-primary" style="font-size: 1.8rem;"></i>
+                    <div class="stat-value mt-2">{{ total_experiments }}</div>
+                    <div class="stat-label">Experiments</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stat-card success border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-people text-success" style="font-size: 1.8rem;"></i>
+                    <div class="stat-value mt-2">{{ total_users }}</div>
+                    <div class="stat-label">Users</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stat-card warning border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-database text-warning" style="font-size: 1.8rem;"></i>
+                    <div class="stat-value mt-2">{{ total_datasets }}</div>
+                    <div class="stat-label">Datasets</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-gear text-info" style="font-size: 1.8rem;"></i>
+                    <div class="stat-value mt-2">{{ total_techniques }}</div>
+                    <div class="stat-label">Techniques</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check text-purple" style="font-size: 1.8rem; color: #8B5CF6;"></i>
+                    <div class="stat-value mt-2">{{ overall_avg_privacy }}</div>
+                    <div class="stat-label">Avg Privacy</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="card stat-card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-stopwatch text-danger" style="font-size: 1.8rem;"></i>
+                    <div class="stat-value mt-2">{{ total_exec_time }}s</div>
+                    <div class="stat-label">Total Compute</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Time-Series Analysis -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h5 class="border-bottom pb-2"><i class="bi bi-clock-history text-primary"></i> Time-Series Analysis</h5>
+        </div>
+    </div>
+    {% include 'admin_panel/partials/_time_series_chart.html' %}
+
+    <!-- Section 2: User Analytics -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h5 class="border-bottom pb-2"><i class="bi bi-people text-success"></i> User Analytics</h5>
+        </div>
+    </div>
+    {% include 'admin_panel/partials/_user_analytics.html' %}
+
+    <!-- Section 3: Dataset Analytics -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h5 class="border-bottom pb-2"><i class="bi bi-database text-warning"></i> Dataset Analytics</h5>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-pie-chart text-info"></i> Approval Status</h6>
+                </div>
                 <div class="card-body">
-                    {% if technique_performance %}
+                    <canvas id="dsApprovalChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-bar-chart text-primary"></i> Type Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="dsTypeChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-upload text-success"></i> Upload Volume</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="dsUploadChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if avg_approval_time is not None %}
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2">{{ avg_approval_time }} hrs</h3>
+                    <p class="text-muted mb-0">Average Approval Time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section 4: Technique Analytics -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h5 class="border-bottom pb-2"><i class="bi bi-gear text-info"></i> Technique Analytics</h5>
+        </div>
+    </div>
+    {% include 'admin_panel/partials/_technique_analytics.html' %}
+
+    <!-- Section 5: System Health -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h5 class="border-bottom pb-2"><i class="bi bi-heart-pulse text-danger"></i> System Health</h5>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle text-danger"></i> Failure Rate & Experiment Volume</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="healthChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-clock text-warning"></i> Avg Execution Time Trend</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="execTimeChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-chat-square-text text-danger"></i> Most Common Error Messages</h6>
+                </div>
+                <div class="card-body">
+                    {% if common_errors %}
                     <div class="table-responsive">
-                        <table class="table">
+                        <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Technique</th>
-                                    <th>Experiments</th>
-                                    <th>Avg Privacy Score</th>
-                                    <th>Avg Time (s)</th>
-                                    <th>Avg Accuracy</th>
+                                    <th>#</th>
+                                    <th>Error Message</th>
+                                    <th class="text-end">Occurrences</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for perf in technique_performance %}
+                                {% for err in common_errors %}
                                 <tr>
-                                    <td>{{ perf.technique }}</td>
-                                    <td>{{ perf.total_experiments }}</td>
-                                    <td>{{ perf.avg_privacy_score|floatformat:2 }}</td>
-                                    <td>{{ perf.avg_execution_time|floatformat:2 }}</td>
-                                    <td>{{ perf.avg_accuracy|floatformat:4 }}</td>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><code class="text-danger">{{ err.error_message|truncatechars:120 }}</code></td>
+                                    <td class="text-end"><span class="badge bg-danger rounded-pill">{{ err.count }}</span></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     {% else %}
-                    <p class="text-muted">No data available.</p>
+                    <p class="text-muted text-center py-3">No errors recorded.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctxDefaults = { color: '#94A3B8', borderColor: 'rgba(148, 163, 184, 0.1)' };
+    Chart.defaults.color = ctxDefaults.color;
+    Chart.defaults.borderColor = ctxDefaults.borderColor;
+
+    // Dataset approval chart
+    var dsApproved = {{ ds_approved }};
+    var dsRejected = {{ ds_rejected }};
+    var dsPending = {{ ds_pending }};
+    if (dsApproved + dsRejected + dsPending > 0) {
+        new Chart(document.getElementById('dsApprovalChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Rejected', 'Pending'],
+                datasets: [{
+                    data: [dsApproved, dsRejected, dsPending],
+                    backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(245, 158, 11, 0.8)'],
+                    borderColor: '#1E293B',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    // Dataset type chart
+    var dsTypeLabels = {{ ds_type_labels|safe }};
+    var dsTypeValues = {{ ds_type_values|safe }};
+    if (dsTypeLabels.length) {
+        var dsColors = ['rgba(139, 92, 246, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(20, 184, 166, 0.7)', 'rgba(249, 115, 22, 0.7)', 'rgba(59, 130, 246, 0.7)'];
+        new Chart(document.getElementById('dsTypeChart'), {
+            type: 'bar',
+            data: {
+                labels: dsTypeLabels,
+                datasets: [{
+                    label: 'Datasets',
+                    data: dsTypeValues,
+                    backgroundColor: dsColors.slice(0, dsTypeLabels.length),
+                    borderColor: dsColors.slice(0, dsTypeLabels.length).map(c => c.replace('0.7', '1')),
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { stepSize: 1 } },
+                    y: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // Upload volume chart
+    var uploadMonths = {{ upload_months|safe }};
+    var uploadCounts = {{ upload_counts|safe }};
+    if (uploadMonths.length) {
+        new Chart(document.getElementById('dsUploadChart'), {
+            type: 'line',
+            data: {
+                labels: uploadMonths,
+                datasets: [{
+                    label: 'Uploads',
+                    data: uploadCounts,
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { font: { size: 10 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    }
+
+    // Health chart: failure rate + volume
+    var healthLabels = {{ health_labels|safe }};
+    var failureRates = {{ failure_rates|safe }};
+    var monthlyVolumes = {{ monthly_volumes|safe }};
+    if (healthLabels.length) {
+        new Chart(document.getElementById('healthChart'), {
+            type: 'bar',
+            data: {
+                labels: healthLabels,
+                datasets: [
+                    {
+                        label: 'Experiment Volume',
+                        data: monthlyVolumes,
+                        backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        order: 2,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Failure Rate (%)',
+                        data: failureRates,
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        type: 'line',
+                        order: 1,
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { boxWidth: 12, font: { size: 10 } } } },
+                scales: {
+                    x: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { font: { size: 10 } } },
+                    y: { beginAtZero: true, position: 'left', grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { stepSize: 1 } },
+                    y1: { beginAtZero: true, max: 100, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // Execution time trend
+    var execLabels = {{ exec_month_labels|safe }};
+    var execTimes = {{ exec_times|safe }};
+    if (execLabels.length) {
+        new Chart(document.getElementById('execTimeChart'), {
+            type: 'line',
+            data: {
+                labels: execLabels,
+                datasets: [{
+                    label: 'Avg Exec Time (s)',
+                    data: execTimes,
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(249, 115, 22, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { font: { size: 10 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.08)' } }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
