@@ -216,3 +216,48 @@ def generate_privacy_breakdown(experiment):
 
     fig.tight_layout()
     return _fig_to_base64(fig)
+
+
+def generate_scatter_chart(experiments):
+    exec_times = []
+    throughputs = []
+    names = []
+    colors_list = ['#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#3B82F6',
+                   '#F59E0B', '#10B981', '#EF4444', '#6366F1', '#84CC16']
+
+    for exp in experiments:
+        et = exp.execution_time or 0
+        tp = exp.throughput or 0
+        exec_times.append(et)
+        throughputs.append(tp)
+        names.append(exp.name[:30])
+
+    if not exec_times:
+        return None
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.patch.set_facecolor('#1E293B')
+    ax.set_facecolor('#1E293B')
+
+    scatter_colors = [colors_list[i % len(colors_list)] for i in range(len(exec_times))]
+    ax.scatter(exec_times, throughputs, c=scatter_colors, s=120, edgecolors='#1E293B',
+               linewidths=1.5, zorder=5, alpha=0.9)
+
+    for i, name in enumerate(names):
+        ax.annotate(name, (exec_times[i], throughputs[i]),
+                     textcoords="offset points", xytext=(8, 5),
+                     fontsize=8, color='#CBD5E1', alpha=0.85)
+
+    ax.set_xlabel('Execution Time (s)', color='#CBD5E1', fontsize=11)
+    ax.set_ylabel('Throughput (tps)', color='#CBD5E1', fontsize=11)
+    ax.set_title('Performance: Execution Time vs Throughput', color='#F1F5F9',
+                 fontsize=14, fontweight='bold', pad=15)
+    ax.tick_params(axis='both', colors='#CBD5E1')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#475569')
+    ax.spines['bottom'].set_color('#475569')
+    ax.grid(color='#334155', linewidth=0.5)
+
+    fig.tight_layout()
+    return _fig_to_base64(fig)

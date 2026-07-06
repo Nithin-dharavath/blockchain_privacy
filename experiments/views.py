@@ -18,6 +18,7 @@ from .visualization import (
     generate_radar_chart,
     generate_trend_chart,
     generate_privacy_breakdown,
+    generate_scatter_chart,
 )
 
 # Import privacy techniques
@@ -191,17 +192,101 @@ def experiment_create(request):
 
 @login_required
 def experiment_detail(request, pk):
-    """View experiment details and results"""
+    """View experiment details and results with charts and analysis"""
     experiment = get_object_or_404(Experiment, pk=pk, user=request.user)
-    
-    # Parse metrics if available
+
     metrics = experiment.metrics if experiment.metrics else {}
-    
+
+    # Historical runs: same technique, different experiments
+    historical_runs = (
+        Experiment.objects
+        .filter(
+            user=request.user,
+            privacy_technique=experiment.privacy_technique,
+            status='completed',
+        )
+        .exclude(pk=experiment.pk)
+        .order_by('-completed_at')[:20]
+    )
+
+    # Charts (only if completed)
+    scatter_chart = None
+    privacy_breakdown_chart = None
+    if experiment.status == 'completed':
+        # Scatter needs at least the current experiment + any historical for context
+        scatter_qs = Experiment.objects.filter(
+            user=request.user,
+            status='completed',
+            privacy_technique=experiment.privacy_technique,
+        )
+        if scatter_qs.count() >= 2:
+            scatter_chart = generate_scatter_chart(scatter_qs[:15])
+        else:
+            scatter_chart = generate_scatter_chart([experiment])
+        privacy_breakdown_chart = generate_privacy_breakdown(experiment)
+
+    # Config impact: build a summary of config params and their observed effect
+    config_impact = []
+    if experiment.configuration:
+        for param, value in experiment.configuration.items():
+            config_impact.append({
+                'param': param.replace('_', ' ').title(),
+                'value': value,
+            })
+
     context = {
         'experiment': experiment,
-        'metrics': metrics
+        'metrics': metrics,
+        'historical_runs': historical_runs,
+        'scatter_chart': scatter_chart,
+        'privacy_breakdown_chart': privacy_breakdown_chart,
+        'config_impact': config_impact,
     }
     return render(request, 'experiments/experiment_detail.html', context)
+
+
+@login_required
+def experiment_export(request, pk):
+    """Export experiment as CSV or JSON"""
+    import csv as csv_mod
+    from django.http import HttpResponse
+
+    experiment = get_object_or_404(Experiment, pk=pk, user=request.user)
+    fmt = request.GET.get('format', 'json')
+    metrics = experiment.metrics if experiment.metrics else {}
+
+    row = {
+        'name': experiment.name,
+        'technique': experiment.privacy_technique.name,
+        'dataset': experiment.dataset.name,
+        'status': experiment.status,
+        'privacy_score': experiment.privacy_score,
+        'accuracy': experiment.accuracy,
+        'execution_time': experiment.execution_time,
+        'throughput': experiment.throughput,
+        'anonymity_set_size': experiment.anonymity_set_size,
+        'created_at': experiment.created_at.isoformat() if experiment.created_at else '',
+        'completed_at': experiment.completed_at.isoformat() if experiment.completed_at else '',
+        'configuration': json.dumps(experiment.configuration),
+        'metrics': json.dumps(metrics),
+    }
+
+    filename = f"experiment_{experiment.pk}"
+
+    if fmt == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+        writer = csv_mod.DictWriter(response, fieldnames=row.keys())
+        writer.writeheader()
+        writer.writerow(row)
+    else:
+        response = HttpResponse(
+            json.dumps(row, indent=2),
+            content_type='application/json',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}.json"'
+
+    return response
 
 @login_required
 def run_experiment(request, pk):
