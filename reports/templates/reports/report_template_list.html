@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report Templates - Privacy Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-earmark-text"></i> Report Templates</h2>
+            <a href="{% url 'reports:template_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Template
+            </a>
+            <a href="{% url 'reports:list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if templates %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Sections</th>
+                                    <th>Public</th>
+                                    <th>Owner</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template in templates %}
+                                <tr>
+                                    <td><strong>{{ template.name }}</strong></td>
+                                    <td>{{ template.description|truncatechars:60 }}</td>
+                                    <td>
+                                        {% for section in template.sections %}
+                                        <span class="badge bg-info me-1">{{ section }}</span>
+                                        {% empty %}
+                                        <span class="text-muted">All sections</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% if template.is_public %}
+                                        <span class="badge bg-success">Public</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Private</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ template.user.username|default:"System" }}</td>
+                                    <td>{{ template.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if template.user == request.user or request.user.is_superuser %}
+                                        <a href="{% url 'reports:template_edit' template.pk %}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'reports:template_delete' template.pk %}" style="display:inline" onsubmit="return confirm('Delete template &quot;{{ template.name }}&quot;?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-muted"><i class="bi bi-lock"></i></span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-file-earmark-text" style="font-size: 4rem; color: #ccc;"></i>
+                        <h4 class="mt-3">No Templates Yet</h4>
+                        <p class="text-muted">Create a template to customize the look and content of your reports.</p>
+                        <a href="{% url 'reports:template_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Create Template
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
