@@ -13,6 +13,13 @@ import time
 import json
 import logging
 
+from .visualization import (
+    generate_comparison_chart,
+    generate_radar_chart,
+    generate_trend_chart,
+    generate_privacy_breakdown,
+)
+
 # Import privacy techniques
 import sys
 import os
@@ -131,6 +138,10 @@ def results_dashboard(request):
     all_techniques = PrivacyTechnique.objects.filter(is_active=True)
     all_datasets = Dataset.objects.filter(uploaded_by=request.user, status='approved')
 
+    comparison_chart = generate_comparison_chart(completed[:8])
+    radar_chart = generate_radar_chart(completed[:5])
+    trend_chart = generate_trend_chart(qs)
+
     context = {
         'stats': stats,
         'trend_labels': json.dumps(trend_labels),
@@ -146,6 +157,9 @@ def results_dashboard(request):
         'selected_dataset': dataset_id or '',
         'date_from': date_from or '',
         'date_to': date_to or '',
+        'comparison_chart': comparison_chart,
+        'radar_chart': radar_chart,
+        'trend_chart': trend_chart,
     }
     return render(request, 'experiments/results_dashboard.html', context)
 

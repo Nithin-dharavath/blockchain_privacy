@@ -69,13 +69,13 @@
 - [x] Filter bar: date range, technique type, dataset
 
 ### 2.2 Visualization Engine
-- [ ] Create `experiments/visualization.py`:
-  - [ ] `generate_comparison_chart(experiments, chart_type)` — grouped bar chart
-  - [ ] `generate_radar_chart(experiments)` — multi-axis radar
-  - [ ] `generate_trend_chart(experiments_qs)` — time-series line chart
-  - [ ] `generate_privacy_breakdown(experiment)` — per-metric breakdown
-  - [ ] All return base64-encoded PNG/SVG for embedding
-- [ ] Requirements: add `matplotlib` (and optionally `plotly` for interactive)
+- [x] Create `experiments/visualization.py`:
+  - [x] `generate_comparison_chart(experiments, chart_type)` — grouped bar chart
+  - [x] `generate_radar_chart(experiments)` — multi-axis radar
+  - [x] `generate_trend_chart(experiments_qs)` — time-series line chart
+  - [x] `generate_privacy_breakdown(experiment)` — per-metric breakdown
+  - [x] All return base64-encoded PNG/SVG for embedding
+- [x] Requirements: add `matplotlib` (and optionally `plotly` for interactive)
 
 ### 2.3 Enhanced Experiment Detail View
 - [ ] Add performance scatter plot: execution_time vs throughput
