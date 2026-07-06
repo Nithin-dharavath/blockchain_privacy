@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
-from .models import Report
-from .forms import ReportGenerationForm
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+from .models import Report, ReportSchedule
+from .forms import ReportGenerationForm, ReportScheduleForm
 from experiments.models import Experiment
 import json
 import csv
@@ -386,3 +388,115 @@ def report_delete(request, pk):
     
     context = {'report': report}
     return render(request, 'reports/report_confirm_delete.html', context)
+
+
+# ─── Report Schedule Views ────────────────────────────────────
+
+@login_required
+def schedule_list(request):
+    """List all report schedules for current user"""
+    schedules = ReportSchedule.objects.filter(user=request.user).order_by('-created_at')
+    paginator = Paginator(schedules, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'page_obj': page_obj,
+        'schedules': page_obj,
+    }
+    return render(request, 'reports/report_schedule_list.html', context)
+
+
+@login_required
+def schedule_create(request):
+    """Create a new report schedule"""
+    if request.method == 'POST':
+        form = ReportScheduleForm(request.POST, user=request.user)
+        if form.is_valid():
+            schedule = form.save(commit=False)
+            schedule.user = request.user
+            schedule.next_run = schedule.compute_next_run()
+            schedule.save()
+            form.save_m2m()
+            report_logger.info(
+                "Report schedule created: %s (user=%s, freq=%s)",
+                schedule.name, request.user.username, schedule.schedule_frequency,
+            )
+            messages.success(request, f'Schedule "{schedule.name}" created successfully.')
+            return redirect('reports:schedule_detail', pk=schedule.pk)
+    else:
+        form = ReportScheduleForm(user=request.user)
+
+    context = {
+        'form': form,
+        'is_edit': False,
+        'completed_experiments': Experiment.objects.filter(
+            user=request.user, status='completed'
+        ).order_by('-created_at'),
+    }
+    return render(request, 'reports/report_schedule_form.html', context)
+
+
+@login_required
+def schedule_edit(request, pk):
+    """Edit an existing report schedule"""
+    schedule = get_object_or_404(ReportSchedule, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = ReportScheduleForm(request.POST, instance=schedule, user=request.user)
+        if form.is_valid():
+            schedule = form.save(commit=False)
+            schedule.next_run = schedule.compute_next_run()
+            schedule.save()
+            form.save_m2m()
+            messages.success(request, f'Schedule "{schedule.name}" updated successfully.')
+            return redirect('reports:schedule_detail', pk=schedule.pk)
+    else:
+        form = ReportScheduleForm(instance=schedule, user=request.user)
+
+    context = {
+        'form': form,
+        'is_edit': True,
+        'schedule': schedule,
+        'completed_experiments': Experiment.objects.filter(
+            user=request.user, status='completed'
+        ).order_by('-created_at'),
+    }
+    return render(request, 'reports/report_schedule_form.html', context)
+
+
+@login_required
+def schedule_detail(request, pk):
+    """View schedule details with history of generated reports"""
+    schedule = get_object_or_404(ReportSchedule, pk=pk, user=request.user)
+    generated_reports = schedule.generated_reports.all().order_by('-created_at')
+    paginator = Paginator(generated_reports, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'schedule': schedule,
+        'generated_reports': page_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'reports/report_schedule_detail.html', context)
+
+
+@login_required
+@require_POST
+def schedule_toggle(request, pk):
+    """Toggle schedule active/inactive"""
+    schedule = get_object_or_404(ReportSchedule, pk=pk, user=request.user)
+    schedule.is_active = not schedule.is_active
+    schedule.save(update_fields=['is_active'])
+    status = 'activated' if schedule.is_active else 'deactivated'
+    messages.success(request, f'Schedule "{schedule.name}" {status}.')
+    return redirect('reports:schedule_detail', pk=schedule.pk)
+
+
+@login_required
+@require_POST
+def schedule_delete(request, pk):
+    """Delete a report schedule"""
+    schedule = get_object_or_404(ReportSchedule, pk=pk, user=request.user)
+    name = schedule.name
+    schedule.delete()
+    messages.success(request, f'Schedule "{name}" deleted successfully.')
+    return redirect('reports:schedule_list')

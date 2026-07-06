@@ -135,16 +135,16 @@
 - [x] Update `generate_report_content()` to produce structured dict
 
 ### 3.3 Report Scheduling
-- [ ] `ReportSchedule` model:
-  - [ ] `user` (FK User), `name`, `report_type`, `file_format`
-  - [ ] `schedule_frequency` (choices: daily, weekly, monthly)
-  - [ ] `schedule_day` (IntegerField — day of week/month)
-  - [ ] `experiments` (ManyToManyField or filter criteria JSONField)
-  - [ ] `last_run` (DateTimeField), `next_run` (DateTimeField), `is_active` (BooleanField)
-  - [ ] `auto_generate` (BooleanField — run immediately when condition met)
-- [ ] `python manage.py process_scheduled_reports` — checks `next_run`, generates report, updates schedule
-- [ ] Views: list schedules, create/edit schedule, toggle active, view history
-- [ ] Templates: schedule list, form, detail with past runs
+- [x] `ReportSchedule` model:
+- [x] `user` (FK User), `name`, `report_type`, `file_format`
+- [x] `schedule_frequency` (choices: daily, weekly, monthly)
+- [x] `schedule_day` (IntegerField — day of week/month)
+- [x] `experiments` (ManyToManyField or filter criteria JSONField)
+- [x] `last_run` (DateTimeField), `next_run` (DateTimeField), `is_active` (BooleanField)
+- [x] `auto_generate` (BooleanField — run immediately when condition met)
+- [x] `python manage.py process_scheduled_reports` — checks `next_run`, generates report, updates schedule
+- [x] Views: list schedules, create/edit schedule, toggle active, view history
+- [x] Templates: schedule list, form, detail with past runs
 
 ### 3.4 Report Templates
 - [ ] `ReportTemplate` model:
@@ -174,8 +174,8 @@
 - [ ] Add chart export — generate and embed chart images in all formats
 
 ### 3.7 Templates for Phase 3
-- [ ] `reports/templates/reports/report_schedule_list.html`
-- [ ] `reports/templates/reports/report_schedule_form.html`
+- [x] `reports/templates/reports/report_schedule_list.html`
+- [x] `reports/templates/reports/report_schedule_form.html`
 - [ ] `reports/templates/reports/report_template_list.html`
 - [ ] `reports/templates/reports/report_template_form.html`
 - [ ] `reports/templates/reports/share_report.html`

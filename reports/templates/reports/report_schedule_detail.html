@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ schedule.name }} - Schedule Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'reports:schedule_list' %}">Schedules</a></li>
+                    <li class="breadcrumb-item active">{{ schedule.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-clock-history"></i> {{ schedule.name }}</h4>
+                    <div>
+                        <a href="{% url 'reports:schedule_edit' schedule.pk %}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <form method="post" action="{% url 'reports:schedule_toggle' schedule.pk %}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if schedule.is_active %}btn-secondary{% else %}btn-success{% endif %}">
+                                <i class="bi {% if schedule.is_active %}bi-pause-fill{% else %}bi-play-fill{% endif %}"></i>
+                                {% if schedule.is_active %}Pause{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'reports:schedule_delete' schedule.pk %}" style="display:inline" onsubmit="return confirm('Delete schedule &quot;{{ schedule.name }}&quot;?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Frequency</th>
+                                    <td><span class="badge bg-info">{{ schedule.get_schedule_frequency_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Report Type</th>
+                                    <td><span class="badge bg-secondary">{{ schedule.get_report_type_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>File Format</th>
+                                    <td><span class="badge bg-info">{{ schedule.get_file_format_display|upper }}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>
+                                        {% if schedule.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Paused</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Auto-generate</th>
+                                    <td>{% if schedule.auto_generate %}<i class="bi bi-check-circle-fill text-success"></i> Yes{% else %}<i class="bi bi-x-circle-fill text-danger"></i> No{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Run</th>
+                                    <td>{{ schedule.last_run|date:"M d, Y H:i"|default:"Never" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Next Run</th>
+                                    <td>{{ schedule.next_run|date:"M d, Y H:i"|default:"Not scheduled" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Experiments</th>
+                                    <td>{{ schedule.experiments.count }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if schedule.experiments.all %}
+                    <h5 class="mt-3">Included Experiments</h5>
+                    <ul>
+                        {% for exp in schedule.experiments.all %}
+                        <li><a href="{% url 'experiments:detail' exp.pk %}">{{ exp.name }}</a> ({{ exp.privacy_technique.name }})</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mt-3">No specific experiments selected — will use filter criteria.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Schedule Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Created:</strong> {{ schedule.created_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>Updated:</strong> {{ schedule.updated_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>Total Reports Generated:</strong> {{ generated_reports.paginator.count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Generated Reports</h5>
+                </div>
+                <div class="card-body">
+                    {% if generated_reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Format</th>
+                                    <th>Generated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in generated_reports %}
+                                <tr>
+                                    <td>{{ report.title }}</td>
+                                    <td><span class="badge bg-info">{{ report.get_file_format_display|upper }}</span></td>
+                                    <td>{{ report.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'reports:detail' report.pk %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if report.file %}
+                                        <a href="{% url 'reports:download' report.pk %}" class="btn btn-sm btn-success">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if page_obj.has_next or page_obj.has_previous %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                            {% endif %}
+                            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                            {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted text-center py-4">No reports have been generated from this schedule yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
