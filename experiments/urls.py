@@ -13,4 +13,5 @@ urlpatterns = [
     path('<int:pk>/delete/', views.experiment_delete, name='delete'),
     path('compare/', views.experiment_compare, name='compare'),
     path('comparison/<int:pk>/', views.comparison_detail, name='comparison_detail'),
+    path('comparison/<int:pk>/export/', views.export_comparison, name='export_comparison'),
 ]
