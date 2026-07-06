@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.experiment_list, name='list'),
     path('create/', views.experiment_create, name='create'),
     path('<int:pk>/', views.experiment_detail, name='detail'),
+    path('<int:pk>/export/', views.experiment_export, name='export'),
     path('<int:pk>/run/', views.experiment_run, name='run'),
     path('<int:pk>/delete/', views.experiment_delete, name='delete'),
     path('compare/', views.experiment_compare, name='compare'),

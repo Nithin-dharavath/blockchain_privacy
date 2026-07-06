@@ -78,12 +78,12 @@
 - [x] Requirements: add `matplotlib` (and optionally `plotly` for interactive)
 
 ### 2.3 Enhanced Experiment Detail View
-- [ ] Add performance scatter plot: execution_time vs throughput
-- [ ] Add privacy breakdown bar chart (sub-metrics from `metrics` JSONField)
-- [ ] Add "Historical Runs" section: table of previous runs with same technique
-- [ ] Add "Configuration Impact" — show current config params and their effect on scores
-- [ ] Add "Export This Experiment" button — download as CSV/JSON
-- [ ] Add "Generate Report" quick button — pre-selects this experiment in report form
+- [x] Add performance scatter plot: execution_time vs throughput
+- [x] Add privacy breakdown bar chart (sub-metrics from `metrics` JSONField)
+- [x] Add "Historical Runs" section: table of previous runs with same technique
+- [x] Add "Configuration Impact" — show current config params and their effect on scores
+- [x] Add "Export This Experiment" button — download as CSV/JSON
+- [x] Add "Generate Report" quick button — pre-selects this experiment in report form
 
 ### 2.4 Fix & Enhance Comparison Detail
 - [ ] **BUG FIX**: Replace broken `{% forloop.first %}` logic — actually compute:
