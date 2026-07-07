@@ -17,4 +17,8 @@ urlpatterns = [
     path('audit/', views.admin_audit_logs, name='audit_logs'),
     path('audit/user/<int:pk>/', views.admin_audit_user, name='audit_user'),
     path('audit/object/<str:content_type>/<int:pk>/', views.admin_audit_object, name='audit_object'),
+    path('notifications/', views.admin_notifications, name='notifications'),
+    path('notifications/<int:pk>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/unread-count/', views.unread_notifications_count, name='unread_notifications_count'),
 ]

@@ -224,12 +224,12 @@
 - [x] Template: `admin_panel/templates/admin_panel/audit_logs.html`
 
 ### 4.3 Admin Notifications
-- [ ] `AdminNotification` model:
-  - [ ] `message` (TextField), `type` (choices: info, warning, danger, success)
-  - [ ] `link` (URLField, nullable), `is_read` (BooleanField), `created_at`
-  - [ ] Auto-create on: new dataset pending, experiment failure rate spike, new user registration
-- [ ] Admin dashboard header shows unread badge + dropdown with latest 5
-- [ ] Full page: `/admin-panel/notifications/` — list all, mark read, mark all read
+- [x] `AdminNotification` model:
+  - [x] `message` (TextField), `type` (choices: info, warning, danger, success)
+  - [x] `link` (URLField, nullable), `is_read` (BooleanField), `created_at`
+  - [x] Auto-create on: new dataset pending, experiment failure rate spike, new user registration
+- [x] Admin dashboard header shows unread badge + dropdown with latest 5
+- [x] Full page: `/admin-panel/notifications/` — list all, mark read, mark all read
 
 ### 4.4 System Metrics
 - [ ] `SystemMetric` model:
