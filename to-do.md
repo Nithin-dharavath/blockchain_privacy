@@ -224,7 +224,7 @@
 - [x] Template: `admin_panel/templates/admin_panel/audit_logs.html`
 
 ### 4.3 Admin Notifications
-- [x] `AdminNotification` model:
+- [x] ~~`AdminNotification` model:~~
   - [x] `message` (TextField), `type` (choices: info, warning, danger, success)
   - [x] `link` (URLField, nullable), `is_read` (BooleanField), `created_at`
   - [x] Auto-create on: new dataset pending, experiment failure rate spike, new user registration
@@ -232,11 +232,11 @@
 - [x] Full page: `/admin-panel/notifications/` — list all, mark read, mark all read
 
 ### 4.4 System Metrics
-- [ ] `SystemMetric` model:
-  - [ ] `metric_name` (CharField), `metric_value` (FloatField), `recorded_at` (DateTimeField)
-  - [ ] Captures: active_users, experiments_per_hour, avg_response_time, error_rate
-- [ ] `python manage.py record_system_metrics` — run via cron every 15 minutes
-- [ ] Display metric trends in admin dashboard
+- [x] `SystemMetric` model:
+  - [x] `metric_name` (CharField), `metric_value` (FloatField), `recorded_at` (DateTimeField)
+  - [x] Captures: active_users, experiments_per_hour, avg_response_time, error_rate
+- [x] `python manage.py record_system_metrics` — run via cron every 15 minutes
+- [x] Display metric trends in admin dashboard
 
 ### 4.5 Error Tracking
 - [ ] `ExperimentErrorReport` model:

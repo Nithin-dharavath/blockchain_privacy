@@ -143,7 +143,51 @@
         </div>
     </div>
     
-    <!-- System Performance -->
+    <!-- System Metrics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-activity"></i> System Metrics <small class="text-muted">(latest recorded values)</small></span>
+                    <span class="text-muted small"><i class="bi bi-clock"></i> 15-minute intervals</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-box text-center p-3 border rounded">
+                                <div class="metric-value text-primary">{{ latest_metrics.active_users|default:"—" }}</div>
+                                <div class="metric-label">Active Users (24h)</div>
+                                <canvas id="trend_active_users" height="60"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-box text-center p-3 border rounded">
+                                <div class="metric-value text-success">{{ latest_metrics.experiments_per_hour|default:"—" }}</div>
+                                <div class="metric-label">Experiments / Hour</div>
+                                <canvas id="trend_experiments_per_hour" height="60"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-box text-center p-3 border rounded">
+                                <div class="metric-value text-warning">{{ latest_metrics.avg_response_time|default:"—" }}</div>
+                                <div class="metric-label">Avg Response Time (s)</div>
+                                <canvas id="trend_avg_response_time" height="60"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="metric-box text-center p-3 border rounded">
+                                <div class="metric-value text-danger">{{ latest_metrics.error_rate|default:"—" }}{% if latest_metrics.error_rate is not None %}%{% endif %}</div>
+                                <div class="metric-label">Error Rate</div>
+                                <canvas id="trend_error_rate" height="60"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Performance + Privacy Techniques -->
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="card">
@@ -259,4 +303,54 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Chart.defaults.color = '#94A3B8';
+    Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.1)';
+
+    function renderMiniTrend(canvasId, labelsStr, valuesStr, color) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        var labels = JSON.parse(labelsStr || '[]');
+        var values = JSON.parse(valuesStr || '[]');
+        if (!labels.length) {
+            canvas.parentElement.innerHTML += '<small class="text-muted">No data yet</small>';
+            return;
+        }
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    borderColor: color,
+                    backgroundColor: color.replace('1)', '0.1)'),
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 1,
+                    borderWidth: 1.5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    x: { display: false },
+                    y: { display: false, beginAtZero: true }
+                },
+                elements: { point: { radius: 0 } }
+            }
+        });
+    }
+
+    renderMiniTrend('trend_active_users', '{{ metric_trends.active_users.labels|safe }}', '{{ metric_trends.active_users.values|safe }}', 'rgba(59, 130, 246, 1)');
+    renderMiniTrend('trend_experiments_per_hour', '{{ metric_trends.experiments_per_hour.labels|safe }}', '{{ metric_trends.experiments_per_hour.values|safe }}', 'rgba(16, 185, 129, 1)');
+    renderMiniTrend('trend_avg_response_time', '{{ metric_trends.avg_response_time.labels|safe }}', '{{ metric_trends.avg_response_time.values|safe }}', 'rgba(245, 158, 11, 1)');
+    renderMiniTrend('trend_error_rate', '{{ metric_trends.error_rate.labels|safe }}', '{{ metric_trends.error_rate.values|safe }}', 'rgba(239, 68, 68, 1)');
+});
+</script>
 {% endblock %}
+{% endblock content %}

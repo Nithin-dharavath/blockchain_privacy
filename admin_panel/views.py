@@ -12,7 +12,7 @@ from experiments.models import Experiment
 from privacy_tools.models import PrivacyTechnique
 from privacy_tools.forms import PrivacyTechniqueForm
 from audit.models import AuditLog
-from admin_panel.models import AdminNotification
+from admin_panel.models import AdminNotification, SystemMetric
 from datetime import timedelta
 import json
 import csv
@@ -52,6 +52,28 @@ def admin_dashboard(request):
     unread_count = unread_notifications.count()
     latest_notifications = unread_notifications[:5]
 
+    # System Metrics — latest values for each metric
+    metric_names = ['active_users', 'experiments_per_hour', 'avg_response_time', 'error_rate']
+    latest_metrics = {}
+    for name in metric_names:
+        latest = SystemMetric.objects.filter(metric_name=name).order_by('-recorded_at').first()
+        latest_metrics[name] = latest.metric_value if latest else None
+
+    # System Metric trends for the dashboard charts (last 7 days, one per metric)
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    metric_trends = {}
+    for name in metric_names:
+        records = (
+            SystemMetric.objects
+            .filter(metric_name=name, recorded_at__gte=seven_days_ago)
+            .order_by('recorded_at')
+            .values('metric_value', 'recorded_at')
+        )
+        metric_trends[name] = {
+            'labels': json.dumps([r['recorded_at'].strftime('%Y-%m-%d %H:%M') for r in records]),
+            'values': json.dumps([r['metric_value'] for r in records]),
+        }
+
     context = {
         'total_users': total_users,
         'total_experiments': total_experiments,
@@ -64,6 +86,8 @@ def admin_dashboard(request):
         'avg_privacy_score': round(avg_privacy_score, 2),
         'unread_notifications': latest_notifications,
         'unread_count': unread_count,
+        'latest_metrics': latest_metrics,
+        'metric_trends': metric_trends,
     }
     return render(request, 'admin_panel/dashboard.html', context)
 
@@ -805,6 +829,24 @@ def unread_notifications_count(request):
         ],
     }
     return JsonResponse(data)
+
+
+@login_required
+@user_passes_test(is_admin)
+def system_metric_trends(request):
+    """JSON endpoint returning recorded system metric data for dashboard charts."""
+    metric_name = request.GET.get("metric", "active_users")
+    days = int(request.GET.get("days", 30))
+    cutoff = timezone.now() - timedelta(days=days)
+    records = (
+        SystemMetric.objects
+        .filter(metric_name=metric_name, recorded_at__gte=cutoff)
+        .order_by("recorded_at")
+        .values("metric_value", "recorded_at")
+    )
+    labels = [r["recorded_at"].strftime("%Y-%m-%d %H:%M") for r in records]
+    values = [r["metric_value"] for r in records]
+    return JsonResponse({"labels": labels, "values": values})
 
 
 @login_required
