@@ -5,13 +5,17 @@ from django.db.models import Count, Avg, Q, Sum, F, ExpressionWrapper, DurationF
 from django.db.models.functions import TruncDate, TruncMonth
 from django.core.paginator import Paginator
 from django.utils import timezone
+from django.http import HttpResponse, JsonResponse
 from accounts.models import User
 from datasets.models import Dataset
 from experiments.models import Experiment
 from privacy_tools.models import PrivacyTechnique
 from privacy_tools.forms import PrivacyTechniqueForm
+from audit.models import AuditLog
 from datetime import timedelta
 import json
+import csv
+import io
 
 def is_admin(user):
     """Check if user is admin"""
@@ -595,3 +599,159 @@ def system_reports(request):
         'common_errors': common_errors,
     }
     return render(request, 'admin_panel/system_reports.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_audit_logs(request):
+    """Admin audit viewer — full log with advanced filters and bulk actions."""
+    queryset = AuditLog.objects.select_related("user").all()
+
+    action_type = request.GET.get("action_type")
+    content_type = request.GET.get("content_type")
+    date_from = request.GET.get("date_from")
+    date_to = request.GET.get("date_to")
+    user_id = request.GET.get("user_id")
+    search = request.GET.get("search")
+
+    filters = Q()
+    if action_type:
+        filters &= Q(action_type=action_type)
+    if content_type:
+        filters &= Q(content_type__icontains=content_type)
+    if date_from:
+        filters &= Q(timestamp__gte=date_from)
+    if date_to:
+        filters &= Q(timestamp__date__lte=date_to)
+    if user_id:
+        filters &= Q(user_id=user_id)
+    if search:
+        filters &= Q(object_repr__icontains=search) | Q(url__icontains=search)
+
+    if filters:
+        queryset = queryset.filter(filters)
+
+    # Bulk actions
+    if request.method == "POST":
+        action = request.POST.get("bulk_action")
+        selected_ids = request.POST.getlist("selected_ids")
+
+        if not selected_ids:
+            messages.warning(request, "No entries selected.")
+            return redirect(request.path)
+
+        if action == "export_csv":
+            selected = AuditLog.objects.filter(pk__in=selected_ids).select_related("user")
+            response = HttpResponse(content_type="text/csv")
+            response["Content-Disposition"] = 'attachment; filename="audit_logs.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["Timestamp", "User", "Action", "Content Type", "Object ID", "Object Repr", "IP", "URL", "Method"])
+            for log in selected:
+                writer.writerow([
+                    log.timestamp, log.user.username if log.user else "System",
+                    log.action_type, log.content_type, log.object_id,
+                    log.object_repr, log.ip_address, log.url, log.request_method,
+                ])
+            return response
+
+        elif action == "export_json":
+            selected = AuditLog.objects.filter(pk__in=selected_ids).select_related("user")
+            data = []
+            for log in selected:
+                data.append({
+                    "timestamp": log.timestamp.isoformat(),
+                    "user": log.user.username if log.user else None,
+                    "action_type": log.action_type,
+                    "content_type": log.content_type,
+                    "object_id": log.object_id,
+                    "object_repr": log.object_repr,
+                    "changes": log.changes,
+                    "ip_address": str(log.ip_address) if log.ip_address else None,
+                    "url": log.url,
+                    "request_method": log.request_method,
+                })
+            return JsonResponse(data, safe=False)
+
+        elif action == "delete":
+            count = AuditLog.objects.filter(pk__in=selected_ids).count()
+            AuditLog.objects.filter(pk__in=selected_ids).delete()
+            messages.success(request, f"Deleted {count} audit log entries.")
+            return redirect(request.path)
+
+    action_choices = AuditLog.ACTION_CHOICES
+    content_type_values = (
+        AuditLog.objects.values_list("content_type", flat=True)
+        .distinct()
+        .order_by("content_type")
+    )
+    users = User.objects.filter(audit_logs__isnull=False).distinct().order_by("username")
+    total_count = AuditLog.objects.count()
+
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "action_choices": action_choices,
+        "content_type_values": content_type_values,
+        "users": users,
+        "total_count": total_count,
+        "filtered_count": queryset.count(),
+        "filters": {
+            "action_type": action_type,
+            "content_type": content_type,
+            "date_from": date_from,
+            "date_to": date_to,
+            "user_id": user_id,
+            "search": search,
+        },
+    }
+    return render(request, "admin_panel/audit_logs.html", context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_audit_user(request, pk):
+    """Audit trail for a specific user."""
+    user = get_object_or_404(User, pk=pk)
+    queryset = AuditLog.objects.filter(user=user).select_related("user")
+
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "audit_user": user,
+        "action_choices": AuditLog.ACTION_CHOICES,
+        "total_count": queryset.count(),
+    }
+    return render(request, "admin_panel/audit_logs.html", context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_audit_object(request, content_type, pk):
+    """Audit trail for a specific object."""
+    queryset = AuditLog.objects.filter(
+        content_type__iexact=content_type, object_id=pk
+    ).select_related("user")
+
+    object_repr = ""
+    if queryset.exists():
+        object_repr = queryset.first().object_repr
+
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "object_content_type": content_type,
+        "object_pk": pk,
+        "object_repr": object_repr,
+        "action_choices": AuditLog.ACTION_CHOICES,
+        "total_count": queryset.count(),
+    }
+    return render(request, "admin_panel/audit_logs.html", context)
