@@ -215,13 +215,13 @@
   - [x] Most common error messages (word cloud or frequency table)
 
 ### 4.2 Admin Audit Viewer
-- [ ] New view at `/admin-panel/audit/`:
-  - [ ] Full audit log table (all users, all actions)
-  - [ ] Advanced filters: date range, action type, content type, user, search
-  - [ ] Bulk actions: export selected, delete old
-- [ ] `/admin-panel/audit/user/<pk>/` — audit trail for specific user
-- [ ] `/admin-panel/audit/object/<content_type>/<pk>/` — audit trail for specific object
-- [ ] Template: `admin_panel/templates/admin_panel/audit_logs.html`
+- [x] New view at `/admin-panel/audit/`:
+  - [x] Full audit log table (all users, all actions)
+  - [x] Advanced filters: date range, action type, content type, user, search
+  - [x] Bulk actions: export selected, delete old
+- [x] `/admin-panel/audit/user/<pk>/` — audit trail for specific user
+- [x] `/admin-panel/audit/object/<content_type>/<pk>/` — audit trail for specific object
+- [x] Template: `admin_panel/templates/admin_panel/audit_logs.html`
 
 ### 4.3 Admin Notifications
 - [ ] `AdminNotification` model:

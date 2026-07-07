@@ -14,4 +14,7 @@ urlpatterns = [
     path('techniques/<int:pk>/edit/', views.edit_technique, name='edit_technique'),
     path('techniques/<int:pk>/toggle/', views.toggle_technique, name='toggle_technique'),
     path('reports/', views.system_reports, name='system_reports'),
+    path('audit/', views.admin_audit_logs, name='audit_logs'),
+    path('audit/user/<int:pk>/', views.admin_audit_user, name='audit_user'),
+    path('audit/object/<str:content_type>/<int:pk>/', views.admin_audit_object, name='audit_object'),
 ]
