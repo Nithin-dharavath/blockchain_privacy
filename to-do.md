@@ -239,21 +239,21 @@
 - [x] Display metric trends in admin dashboard
 
 ### 4.5 Error Tracking
-- [ ] `ExperimentErrorReport` model:
-  - [ ] `experiment` (FK), `technique` (FK), `error_message`, `traceback` (TextField)
-  - [ ] `resolved` (BooleanField), `resolved_by` (FK User, nullable), `resolved_at` (DateTimeField)
-  - [ ] `resolution_notes` (TextField)
-- [ ] Auto-create on experiment failure (in the except block of `experiment_run`)
-- [ ] Admin view: list unresolved errors, mark as resolved with notes
+- [x] `ExperimentErrorReport` model:
+  - [x] `experiment` (FK), `technique` (FK), `error_message`, `traceback` (TextField)
+  - [x] `resolved` (BooleanField), `resolved_by` (FK User, nullable), `resolved_at` (DateTimeField)
+  - [x] `resolution_notes` (TextField)
+- [x] Auto-create on experiment failure (in the except block of `experiment_run`)
+- [x] Admin view: list unresolved errors, mark as resolved with notes
 
-### 4.6 Templates for Phase 4
-- [ ] Update `admin_panel/templates/admin_panel/system_reports.html` — full analytics
-- [ ] `admin_panel/templates/admin_panel/audit_logs.html`
-- [ ] `admin_panel/templates/admin_panel/error_reports.html`
-- [ ] `admin_panel/templates/admin_panel/partials/_time_series_chart.html`
-- [ ] `admin_panel/templates/admin_panel/partials/_user_analytics.html`
-- [ ] `admin_panel/templates/admin_panel/partials/_technique_analytics.html`
-- [ ] Update `admin_panel/templates/admin_panel/dashboard.html` — notification badge, more stats
+### 4.6 Templates for Phase Admin & System Analytics
+- [x] Update `admin_panel/templates/admin_panel/system_reports.html` — full analytics
+- [x] `admin_panel/templates/admin_panel/audit_logs.html`
+- [x] `admin_panel/templates/admin_panel/error_reports.html`
+- [x] `admin_panel/templates/admin_panel/partials/_time_series_chart.html`
+- [x] `admin_panel/templates/admin_panel/partials/_user_analytics.html`
+- [x] `admin_panel/templates/admin_panel/partials/_technique_analytics.html`
+- [x] Update `admin_panel/templates/admin_panel/dashboard.html` — notification badge, more stats
 
 ---
 
