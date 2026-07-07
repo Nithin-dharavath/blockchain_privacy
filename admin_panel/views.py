@@ -12,6 +12,7 @@ from experiments.models import Experiment
 from privacy_tools.models import PrivacyTechnique
 from privacy_tools.forms import PrivacyTechniqueForm
 from audit.models import AuditLog
+from admin_panel.models import AdminNotification
 from datetime import timedelta
 import json
 import csv
@@ -46,6 +47,11 @@ def admin_dashboard(request):
         status='completed'
     ).aggregate(Avg('privacy_score'))['privacy_score__avg'] or 0
     
+    # Notifications
+    unread_notifications = AdminNotification.objects.filter(is_read=False)
+    unread_count = unread_notifications.count()
+    latest_notifications = unread_notifications[:5]
+
     context = {
         'total_users': total_users,
         'total_experiments': total_experiments,
@@ -56,6 +62,8 @@ def admin_dashboard(request):
         'pending_dataset_list': pending_dataset_list,
         'technique_stats': technique_stats,
         'avg_privacy_score': round(avg_privacy_score, 2),
+        'unread_notifications': latest_notifications,
+        'unread_count': unread_count,
     }
     return render(request, 'admin_panel/dashboard.html', context)
 
@@ -728,6 +736,75 @@ def admin_audit_user(request, pk):
         "total_count": queryset.count(),
     }
     return render(request, "admin_panel/audit_logs.html", context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_notifications(request):
+    """List all admin notifications with mark-read and mark-all-read actions."""
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "mark_all_read":
+            AdminNotification.objects.filter(is_read=False).update(is_read=True)
+            messages.success(request, "All notifications marked as read.")
+        elif action == "mark_read":
+            notification_id = request.POST.get("notification_id")
+            if notification_id:
+                AdminNotification.objects.filter(pk=notification_id, is_read=False).update(is_read=True)
+        return redirect("admin_panel:notifications")
+
+    queryset = AdminNotification.objects.all()
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "unread_count": AdminNotification.objects.filter(is_read=False).count(),
+    }
+    return render(request, "admin_panel/notifications.html", context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def mark_notification_read(request, pk):
+    """Mark a single notification as read, then redirect back."""
+    notification = get_object_or_404(AdminNotification, pk=pk)
+    notification.is_read = True
+    notification.save(update_fields=["is_read"])
+    return redirect(request.META.get("HTTP_REFERER", "admin_panel:notifications"))
+
+
+@login_required
+@user_passes_test(is_admin)
+def mark_all_notifications_read(request):
+    """Mark all notifications as read."""
+    AdminNotification.objects.filter(is_read=False).update(is_read=True)
+    messages.success(request, "All notifications marked as read.")
+    return redirect("admin_panel:notifications")
+
+
+@login_required
+@user_passes_test(is_admin)
+def unread_notifications_count(request):
+    """JSON endpoint for AJAX polling of unread count + latest 5."""
+    count = AdminNotification.objects.filter(is_read=False).count()
+    latest = AdminNotification.objects.filter(is_read=False)[:5]
+    data = {
+        "count": count,
+        "notifications": [
+            {
+                "id": n.pk,
+                "message": n.message,
+                "type": n.type,
+                "link": n.link,
+                "created_at": n.created_at.isoformat(),
+                "time_ago": n.created_at.strftime("%b %d, %H:%M"),
+            }
+            for n in latest
+        ],
+    }
+    return JsonResponse(data)
 
 
 @login_required

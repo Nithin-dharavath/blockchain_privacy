@@ -10,6 +10,49 @@
             <h2 class="mb-0"><i class="bi bi-shield-check"></i> Admin Dashboard</h2>
             <p class="text-muted">System Overview and Management</p>
         </div>
+        <div class="col-auto">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ unread_count }}
+                    </span>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px;">
+                    <li><h6 class="dropdown-header">Notifications</h6></li>
+                    {% if unread_notifications %}
+                        {% for n in unread_notifications %}
+                        <li>
+                            <a class="dropdown-item" href="{% if n.link %}{{ n.link }}{% else %}{% url 'admin_panel:notifications' %}{% endif %}">
+                                <div class="d-flex align-items-center">
+                                    {% if n.type == 'info' %}
+                                        <span class="badge bg-info me-2"><i class="bi bi-info-circle"></i></span>
+                                    {% elif n.type == 'warning' %}
+                                        <span class="badge bg-warning text-dark me-2"><i class="bi bi-exclamation-triangle"></i></span>
+                                    {% elif n.type == 'danger' %}
+                                        <span class="badge bg-danger me-2"><i class="bi bi-x-circle"></i></span>
+                                    {% elif n.type == 'success' %}
+                                        <span class="badge bg-success me-2"><i class="bi bi-check-circle"></i></span>
+                                    {% endif %}
+                                    <div>
+                                        <small>{{ n.message|truncatechars:60 }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ n.created_at|date:"M d, H:i" }}</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-center" href="{% url 'admin_panel:notifications' %}">View All Notifications</a></li>
+                    {% else %}
+                        <li><span class="dropdown-item-text text-muted">No unread notifications</span></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </div>
     
     <!-- Statistics Cards -->
@@ -87,6 +130,11 @@
                         <div class="col-md-3 mb-3">
                             <a href="{% url 'admin_panel:audit_logs' %}" class="btn btn-dark w-100">
                                 <i class="bi bi-journal-text"></i> Audit Viewer
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin_panel:notifications' %}" class="btn btn-secondary w-100">
+                                <i class="bi bi-bell"></i> Notifications {% if unread_count > 0 %}<span class="badge bg-danger ms-1">{{ unread_count }}</span>{% endif %}
                             </a>
                         </div>
                     </div>
