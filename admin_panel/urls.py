@@ -22,4 +22,6 @@ urlpatterns = [
     path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
     path('notifications/unread-count/', views.unread_notifications_count, name='unread_notifications_count'),
     path('system-metrics/trends/', views.system_metric_trends, name='system_metric_trends'),
+    path('error-reports/', views.error_reports_list, name='error_reports'),
+    path('error-reports/<int:pk>/resolve/', views.error_report_resolve, name='error_report_resolve'),
 ]

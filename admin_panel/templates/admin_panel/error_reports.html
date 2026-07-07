@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Error Reports - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-exclamation-triangle"></i> Error Reports</h2>
+            <p class="text-muted">
+                {{ unresolved_count }} unresolved / {{ total_count }} total
+                {% if unresolved_count > 0 %}
+                <span class="badge bg-danger ms-2">{{ unresolved_count }} pending</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <select name="resolved" class="form-select">
+                        <option value="">All</option>
+                        <option value="unresolved" {% if filters.resolved == 'unresolved' %}selected{% endif %}>Unresolved</option>
+                        <option value="resolved" {% if filters.resolved == 'resolved' %}selected{% endif %}>Resolved</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="technique" class="form-select">
+                        <option value="">All Techniques</option>
+                        {% for t in techniques %}
+                        <option value="{{ t.pk }}" {% if filters.technique|stringformat:'s' == t.pk|stringformat:'s' %}selected{% endif %}>{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="text" name="search" class="form-control" placeholder="Search errors..." value="{{ filters.search|default:'' }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-filter"></i> Filter</button>
+                    <a href="{% url 'admin_panel:error_reports' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Error Report Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Experiment</th>
+                            <th>Technique</th>
+                            <th>Error Message</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in page_obj %}
+                        <tr class="{% if not report.resolved %}table-danger{% else %}table-success{% endif %}">
+                            <td>{{ report.pk }}</td>
+                            <td>
+                                <a href="{% url 'experiments:detail' report.experiment.pk %}">
+                                    {{ report.experiment.name|truncatechars:30 }}
+                                </a>
+                            </td>
+                            <td>{{ report.technique.name|default:'—' }}</td>
+                            <td>
+                                <code>{{ report.error_message|truncatechars:60 }}</code>
+                            </td>
+                            <td>
+                                {% if report.resolved %}
+                                <span class="badge bg-success">Resolved</span>
+                                {% else %}
+                                <span class="badge bg-danger">Unresolved</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report.created_at|date:"M d, H:i" }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailModal{{ report.pk }}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                {% if not report.resolved %}
+                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal{{ report.pk }}">
+                                    <i class="bi bi-check-lg"></i> Resolve
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No error reports found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&resolved={{ filters.resolved }}&technique={{ filters.technique }}&search={{ filters.search }}">Previous</a></li>
+            {% endif %}
+            {% for i in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}&resolved={{ filters.resolved }}&technique={{ filters.technique }}&search={{ filters.search }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&resolved={{ filters.resolved }}&technique={{ filters.technique }}&search={{ filters.search }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Detail Modals -->
+{% for report in page_obj %}
+<div class="modal fade" id="detailModal{{ report.pk }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Error Report #{{ report.pk }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Experiment</dt>
+                    <dd class="col-sm-9">{{ report.experiment.name }}</dd>
+
+                    <dt class="col-sm-3">Technique</dt>
+                    <dd class="col-sm-9">{{ report.technique.name|default:'—' }}</dd>
+
+                    <dt class="col-sm-3">Error Message</dt>
+                    <dd class="col-sm-9"><code>{{ report.error_message }}</code></dd>
+
+                    {% if report.traceback %}
+                    <dt class="col-sm-3">Traceback</dt>
+                    <dd class="col-sm-9"><pre class="bg-dark text-light p-2 rounded" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem;">{{ report.traceback }}</pre></dd>
+                    {% endif %}
+
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">
+                        {% if report.resolved %}
+                        <span class="badge bg-success">Resolved</span>
+                        by {{ report.resolved_by.username|default:'—' }} at {{ report.resolved_at|date:"M d, Y H:i" }}
+                        {% else %}
+                        <span class="badge bg-danger">Unresolved</span>
+                        {% endif %}
+                    </dd>
+
+                    {% if report.resolution_notes %}
+                    <dt class="col-sm-3">Resolution Notes</dt>
+                    <dd class="col-sm-9">{{ report.resolution_notes }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-3">Created</dt>
+                    <dd class="col-sm-9">{{ report.created_at|date:"M d, Y H:i:s" }}</dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Resolve Modals -->
+{% for report in page_obj %}
+{% if not report.resolved %}
+<div class="modal fade" id="resolveModal{{ report.pk }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resolve Error Report #{{ report.pk }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_panel:error_report_resolve' report.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p><strong>Error:</strong> <code>{{ report.error_message }}</code></p>
+                    <div class="mb-3">
+                        <label for="resolution_notes_{{ report.pk }}" class="form-label">Resolution Notes</label>
+                        <textarea name="resolution_notes" id="resolution_notes_{{ report.pk }}" class="form-control" rows="3" placeholder="Describe how this error was resolved..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Mark Resolved</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

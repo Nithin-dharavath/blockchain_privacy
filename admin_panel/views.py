@@ -12,7 +12,7 @@ from experiments.models import Experiment
 from privacy_tools.models import PrivacyTechnique
 from privacy_tools.forms import PrivacyTechniqueForm
 from audit.models import AuditLog
-from admin_panel.models import AdminNotification, SystemMetric
+from admin_panel.models import AdminNotification, SystemMetric, ExperimentErrorReport
 from datetime import timedelta
 import json
 import csv
@@ -47,6 +47,9 @@ def admin_dashboard(request):
         status='completed'
     ).aggregate(Avg('privacy_score'))['privacy_score__avg'] or 0
     
+    # Error Reports
+    unresolved_error_count = ExperimentErrorReport.objects.filter(resolved=False).count()
+
     # Notifications
     unread_notifications = AdminNotification.objects.filter(is_read=False)
     unread_count = unread_notifications.count()
@@ -86,6 +89,7 @@ def admin_dashboard(request):
         'avg_privacy_score': round(avg_privacy_score, 2),
         'unread_notifications': latest_notifications,
         'unread_count': unread_count,
+        'unresolved_error_count': unresolved_error_count,
         'latest_metrics': latest_metrics,
         'metric_trends': metric_trends,
     }
@@ -847,6 +851,67 @@ def system_metric_trends(request):
     labels = [r["recorded_at"].strftime("%Y-%m-%d %H:%M") for r in records]
     values = [r["metric_value"] for r in records]
     return JsonResponse({"labels": labels, "values": values})
+
+
+@login_required
+@user_passes_test(is_admin)
+def error_reports_list(request):
+    queryset = ExperimentErrorReport.objects.select_related(
+        'experiment', 'technique', 'resolved_by'
+    )
+
+    resolved_filter = request.GET.get('resolved')
+    if resolved_filter == 'unresolved':
+        queryset = queryset.filter(resolved=False)
+    elif resolved_filter == 'resolved':
+        queryset = queryset.filter(resolved=True)
+
+    tech_id = request.GET.get('technique')
+    if tech_id:
+        queryset = queryset.filter(technique_id=tech_id)
+
+    search = request.GET.get('search')
+    if search:
+        queryset = queryset.filter(
+            Q(error_message__icontains=search) |
+            Q(experiment__name__icontains=search)
+        )
+
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    techniques = PrivacyTechnique.objects.filter(
+        experimenterrorreport__isnull=False
+    ).distinct().order_by('name')
+
+    context = {
+        'page_obj': page_obj,
+        'techniques': techniques,
+        'filters': {
+            'resolved': resolved_filter,
+            'technique': tech_id,
+            'search': search,
+        },
+        'unresolved_count': ExperimentErrorReport.objects.filter(resolved=False).count(),
+        'total_count': ExperimentErrorReport.objects.count(),
+    }
+    return render(request, 'admin_panel/error_reports.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def error_report_resolve(request, pk):
+    report = get_object_or_404(ExperimentErrorReport, pk=pk)
+    if request.method == 'POST':
+        resolution_notes = request.POST.get('resolution_notes', '').strip()
+        report.resolved = True
+        report.resolved_by = request.user
+        report.resolved_at = timezone.now()
+        report.resolution_notes = resolution_notes
+        report.save()
+        messages.success(request, 'Error report marked as resolved.')
+    return redirect('admin_panel:error_reports')
 
 
 @login_required

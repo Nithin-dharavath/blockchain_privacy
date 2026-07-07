@@ -13,6 +13,8 @@ import time
 import json
 import logging
 
+from admin_panel.models import ExperimentErrorReport
+
 from .visualization import (
     generate_comparison_chart,
     generate_radar_chart,
@@ -342,7 +344,14 @@ def run_experiment(request, pk):
         experiment.completed_at = timezone.now()
         experiment.save()
         exp_logger.error("Experiment %s failed: %s", experiment.pk, str(e))
-        
+        try:
+            ExperimentErrorReport.objects.create(
+                experiment=experiment,
+                technique=experiment.privacy_technique,
+                error_message=str(e),
+            )
+        except Exception:
+            pass
         messages.error(request, f'Experiment failed: {str(e)}')
     
     return redirect('experiments:detail', pk=pk)
@@ -414,7 +423,14 @@ def experiment_run(request, pk):
         experiment.completed_at = timezone.now()
         experiment.save()
         exp_logger.error("Experiment %s failed: %s", experiment.pk, str(e))
-        
+        try:
+            ExperimentErrorReport.objects.create(
+                experiment=experiment,
+                technique=experiment.privacy_technique,
+                error_message=str(e),
+            )
+        except Exception:
+            pass
         messages.error(request, f'Experiment failed: {str(e)}')
     
     return redirect('experiments:detail', pk=pk)

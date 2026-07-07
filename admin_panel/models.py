@@ -2,6 +2,35 @@ from django.db import models
 from django.conf import settings
 
 
+class ExperimentErrorReport(models.Model):
+    experiment = models.ForeignKey(
+        'experiments.Experiment', on_delete=models.CASCADE,
+        related_name='error_reports'
+    )
+    technique = models.ForeignKey(
+        'privacy_tools.PrivacyTechnique', on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    error_message = models.TextField()
+    traceback = models.TextField(blank=True, default='')
+    resolved = models.BooleanField(default=False)
+    resolved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='resolved_errors'
+    )
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolution_notes = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Experiment Error Report'
+        verbose_name_plural = 'Experiment Error Reports'
+
+    def __str__(self):
+        return f"Error #{self.pk}: {self.error_message[:80]}"
+
+
 class SystemMetric(models.Model):
     METRIC_NAMES = [
         ('active_users', 'Active Users'),
