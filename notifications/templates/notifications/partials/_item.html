@@ -1,0 +1,24 @@
+{% load notification_tags %}
+<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start
+            {% if not notification.is_read %}list-group-item-primary fw-bold{% endif %}"
+     data-notif-id="{{ notification.id }}">
+    <div class="ms-2 me-auto">
+        <div class="d-flex align-items-center">
+            {% if not notification.is_read %}
+            <span class="badge bg-primary rounded-pill me-2" style="width:8px;height:8px;padding:0;">&nbsp;</span>
+            {% endif %}
+            <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+        </div>
+        <p class="mb-1 mt-1">{{ notification.description }}</p>
+        {% if notification.action_url %}
+        <a href="{{ notification.action_url }}" class="stretched-link">View details</a>
+        {% endif %}
+    </div>
+    {% if not notification.is_read %}
+    <button class="btn btn-sm btn-outline-secondary mark-read-btn"
+            data-notif-id="{{ notification.id }}"
+            title="Mark as read">
+        <i class="bi bi-check"></i>
+    </button>
+    {% endif %}
+</div>

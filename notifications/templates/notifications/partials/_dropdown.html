@@ -1,0 +1,46 @@
+<li class="nav-item dropdown">
+    <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-bell"></i>
+        {% if unread_count > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">
+            {% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}
+        </span>
+        {% endif %}
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" style="min-width: 340px;" aria-labelledby="notificationDropdown">
+        <li><h6 class="dropdown-header">
+            <i class="bi bi-bell"></i> Notifications
+            {% if unread_count > 0 %}
+            <span class="badge bg-danger ms-1">{{ unread_count }}</span>
+            {% endif %}
+        </h6></li>
+        <li><hr class="dropdown-divider"></li>
+        {% if unread_notifications %}
+            {% for n in unread_notifications %}
+            <li>
+                <a class="dropdown-item {% if not n.is_read %}fw-bold{% endif %}" href="{% if n.action_url %}{{ n.action_url }}{% else %}{% url 'notifications:list' %}{% endif %}">
+                    <div class="d-flex align-items-center">
+                        {% if not n.is_read %}
+                        <span class="badge bg-primary rounded-pill me-2" style="width:8px;height:8px;padding:0;flex-shrink:0;">&nbsp;</span>
+                        {% else %}
+                        <span class="me-2" style="width:8px;height:8px;flex-shrink:0;">&nbsp;</span>
+                        {% endif %}
+                        <div class="overflow-hidden">
+                            <small class="d-block text-truncate">{{ n.description|truncatechars:60 }}</small>
+                            <small class="text-muted">{{ n.created_at|timesince }} ago</small>
+                        </div>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-center small" href="{% url 'notifications:list' %}">
+                <i class="bi bi-eye"></i> View All Notifications
+            </a></li>
+        {% else %}
+            <li><span class="dropdown-item-text text-muted text-center d-block py-2">
+                <i class="bi bi-bell-slash"></i> No unread notifications
+            </span></li>
+        {% endif %}
+    </ul>
+</li>
