@@ -262,13 +262,13 @@
 **Goal**: Universal notification system across all user actions.
 
 ### 5.1 Notification Model
-- [ ] `Notification` model:
-  - [ ] `recipient` (FK User), `actor` (FK User, nullable)
-  - [ ] `verb` (CharField choices: experiment_completed, experiment_failed, dataset_approved, dataset_rejected, report_ready, report_shared, comparison_shared)
-  - [ ] `description` (TextField)
-  - [ ] `action_url` (URLField or CharField — relative path)
-  - [ ] `is_read` (BooleanField default False), `read_at` (DateTimeField, nullable)
-  - [ ] `created_at` (DateTimeField auto_now_add)
+- [x] `Notification` model:
+  - [x] `recipient` (FK User), `actor` (FK User, nullable)
+  - [x] `verb` (CharField choices: experiment_completed, experiment_failed, dataset_approved, dataset_rejected, report_ready, report_shared, comparison_shared)
+  - [x] `description` (TextField)
+  - [x] `action_url` (URLField or CharField — relative path)
+  - [x] `is_read` (BooleanField default False), `read_at` (DateTimeField, nullable)
+  - [x] `created_at` (DateTimeField auto_now_add)
 
 ### 5.2 Notification Triggers
 - [ ] Experiment completes → notify owner with link to detail
@@ -291,7 +291,7 @@
 - [ ] Unread indicator (bold text + blue dot)
 - [ ] Full page at `/notifications/` with pagination
 
-### 5.5 Templates for Phase 5
+### 5.5 Templates for Notifications System
 - [ ] `notifications/templates/notifications/list.html`
 - [ ] `notifications/templates/notifications/partials/_dropdown.html`
 - [ ] `notifications/templates/notifications/partials/_item.html`
@@ -335,7 +335,7 @@
 - [ ] Write tests for management commands
 - [ ] Aim for >70% coverage on new code
 
-### 6.6 Templates for Phase 6
+### 6.6 Templates for Data Integrity
 - [ ] `export/templates/export/export_page.html`
 - [ ] `share/templates/share/experiment_view.html`
 
