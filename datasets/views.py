@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.urls import reverse
 from .models import Dataset
 from .forms import DatasetUploadForm
+from notifications.utils import notify_all_admins
 import pandas as pd
 import os
 
@@ -48,6 +50,12 @@ def dataset_upload(request):
                 messages.warning(request, f'Could not read file structure: {str(e)}')
             
             dataset.save()
+            notify_all_admins(
+                verb='dataset_pending',
+                description=f'New dataset "{dataset.name}" uploaded by {request.user.username} is pending approval.',
+                actor=request.user,
+                action_url=reverse('datasets:detail', kwargs={'pk': dataset.pk}),
+            )
             messages.success(request, 'Dataset uploaded successfully! Waiting for approval.')
             return redirect('datasets:list')
     else:

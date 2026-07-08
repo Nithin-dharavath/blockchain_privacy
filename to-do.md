@@ -271,12 +271,12 @@
   - [x] `created_at` (DateTimeField auto_now_add)
 
 ### 5.2 Notification Triggers
-- [ ] Experiment completes → notify owner with link to detail
-- [ ] Experiment fails → notify owner with link to error
-- [ ] Dataset approved/rejected → notify uploader with admin notes
-- [ ] Report generation completes → notify creator with download link
-- [ ] Report shared → notify recipient (if user exists)
-- [ ] Dataset pending approval → notify all admin users
+- [x] Experiment completes → notify owner with link to detail
+- [x] Experiment fails → notify owner with link to error
+- [x] Dataset approved/rejected → notify uploader with admin notes
+- [x] Report generation completes → notify creator with download link
+- [x] Report shared → notify recipient (if user exists)
+- [x] Dataset pending approval → notify all admin users
 
 ### 5.3 Notification Views & URLs
 - [ ] `/notifications/` — list all, filter by read/unread

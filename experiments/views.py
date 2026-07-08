@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -14,6 +15,7 @@ import json
 import logging
 
 from admin_panel.models import ExperimentErrorReport
+from notifications.utils import create_notification, notify_all_admins
 
 from .visualization import (
     generate_comparison_chart,
@@ -335,6 +337,12 @@ def run_experiment(request, pk):
             experiment.pk, experiment.execution_time,
             experiment.privacy_score, experiment.accuracy,
         )
+        create_notification(
+            recipient=request.user,
+            verb='experiment_completed',
+            description=f'Experiment "{experiment.name}" completed successfully with privacy score {experiment.privacy_score:.2f}',
+            action_url=reverse('experiments:detail', kwargs={'pk': experiment.pk}),
+        )
         
         messages.success(request, f'Experiment "{experiment.name}" completed successfully!')
     
@@ -344,6 +352,12 @@ def run_experiment(request, pk):
         experiment.completed_at = timezone.now()
         experiment.save()
         exp_logger.error("Experiment %s failed: %s", experiment.pk, str(e))
+        create_notification(
+            recipient=request.user,
+            verb='experiment_failed',
+            description=f'Experiment "{experiment.name}" failed: {str(e)[:200]}',
+            action_url=reverse('experiments:detail', kwargs={'pk': experiment.pk}),
+        )
         try:
             ExperimentErrorReport.objects.create(
                 experiment=experiment,
@@ -414,6 +428,12 @@ def experiment_run(request, pk):
             experiment.pk, experiment.execution_time,
             experiment.privacy_score, experiment.accuracy,
         )
+        create_notification(
+            recipient=request.user,
+            verb='experiment_completed',
+            description=f'Experiment "{experiment.name}" completed successfully with privacy score {experiment.privacy_score:.2f}',
+            action_url=reverse('experiments:detail', kwargs={'pk': experiment.pk}),
+        )
         
         messages.success(request, 'Experiment completed successfully!')
         
@@ -423,6 +443,12 @@ def experiment_run(request, pk):
         experiment.completed_at = timezone.now()
         experiment.save()
         exp_logger.error("Experiment %s failed: %s", experiment.pk, str(e))
+        create_notification(
+            recipient=request.user,
+            verb='experiment_failed',
+            description=f'Experiment "{experiment.name}" failed: {str(e)[:200]}',
+            action_url=reverse('experiments:detail', kwargs={'pk': experiment.pk}),
+        )
         try:
             ExperimentErrorReport.objects.create(
                 experiment=experiment,
