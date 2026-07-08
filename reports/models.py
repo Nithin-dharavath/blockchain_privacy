@@ -67,6 +67,7 @@ class Report(AuditableMixin, models.Model):
         'ReportSchedule', on_delete=models.SET_NULL,
         blank=True, null=True, related_name='generated_reports'
     )
+    generated_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'admin_panel',
     'audit',
     'notifications',
+    'export',
+    'share',
 ]
 
 MIDDLEWARE = [
