@@ -1,5 +1,9 @@
 from django.contrib import admin
+from django.utils import timezone
+from django.urls import reverse
 from .models import Dataset
+from notifications.utils import create_notification
+
 
 @admin.register(Dataset)
 class DatasetAdmin(admin.ModelAdmin):
@@ -25,3 +29,21 @@ class DatasetAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         }),
     )
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            old_status = Dataset.objects.get(pk=obj.pk).status
+            new_status = obj.status
+            if old_status != new_status and new_status in ('approved', 'rejected'):
+                obj.approved_by = request.user
+                obj.approved_at = timezone.now()
+                verb = 'dataset_approved' if new_status == 'approved' else 'dataset_rejected'
+                notes = obj.approval_notes or ''
+                create_notification(
+                    recipient=obj.uploaded_by,
+                    verb=verb,
+                    description=f'Dataset "{obj.name}" was {new_status} by {request.user.username}. {notes}',
+                    actor=request.user,
+                    action_url=reverse('datasets:detail', kwargs={'pk': obj.pk}),
+                )
+        super().save_model(request, obj, form, change)

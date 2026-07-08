@@ -8,6 +8,7 @@ class Notification(models.Model):
         ("experiment_failed", "Experiment Failed"),
         ("dataset_approved", "Dataset Approved"),
         ("dataset_rejected", "Dataset Rejected"),
+        ("dataset_pending", "Dataset Pending Approval"),
         ("report_ready", "Report Ready"),
         ("report_shared", "Report Shared"),
         ("comparison_shared", "Comparison Shared"),
