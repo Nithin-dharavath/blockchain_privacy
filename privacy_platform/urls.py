@@ -14,6 +14,7 @@ urlpatterns = [
     path('reports/', include('reports.urls')),
     path('audit/', include('audit.urls')),
     path('admin-panel/', include('admin_panel.urls')),
+    path('notifications/', include('notifications.urls')),
 ]
 
 # Serve media files in development
