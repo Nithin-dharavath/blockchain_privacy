@@ -279,11 +279,11 @@
 - [x] Dataset pending approval → notify all admin users
 
 ### 5.3 Notification Views & URLs
-- [ ] `/notifications/` — list all, filter by read/unread
-- [ ] `/notifications/mark-read/<pk>/` — mark single as read
-- [ ] `/notifications/mark-all-read/` — mark all as read
-- [ ] `/notifications/unread-count/` — JSON endpoint for badge count (for AJAX polling)
-- [ ] Template filter: `{% notification_badge request.user %}`
+- [x] `/notifications/` — list all, filter by read/unread
+- [x] `/notifications/mark-read/<pk>/` — mark single as read
+- [x] `/notifications/mark-all-read/` — mark all as read
+- [x] `/notifications/unread-count/` — JSON endpoint for badge count (for AJAX polling)
+- [x] Template filter: `{% notification_badge request.user %}`
 
 ### 5.4 Notification UI
 - [ ] Header dropdown in `base.html` — bell icon with count badge
