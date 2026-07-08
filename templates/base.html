@@ -93,6 +93,7 @@
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
+                    {% include 'notifications/partials/_dropdown.html' %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle"></i> {{ user.username }}

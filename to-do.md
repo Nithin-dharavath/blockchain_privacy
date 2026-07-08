@@ -286,16 +286,16 @@
 - [x] Template filter: `{% notification_badge request.user %}`
 
 ### 5.4 Notification UI
-- [ ] Header dropdown in `base.html` — bell icon with count badge
-- [ ] Dropdown shows latest 5 notifications with relative timestamps
-- [ ] Unread indicator (bold text + blue dot)
-- [ ] Full page at `/notifications/` with pagination
+- [x] Header dropdown in `base.html` — bell icon with count badge
+- [x] Dropdown shows latest 5 notifications with relative timestamps
+- [x] Unread indicator (bold text + blue dot)
+- [x] Full page at `/notifications/` with pagination
 
 ### 5.5 Templates for Notifications System
-- [ ] `notifications/templates/notifications/list.html`
-- [ ] `notifications/templates/notifications/partials/_dropdown.html`
-- [ ] `notifications/templates/notifications/partials/_item.html`
-- [ ] Update `base.html` — add notification dropdown to navbar
+- [x] `notifications/templates/notifications/list.html`
+- [x] `notifications/templates/notifications/partials/_dropdown.html`
+- [x] `notifications/templates/notifications/partials/_item.html`
+- [x] Update `base.html` — add notification dropdown to navbar
 
 ---
 
