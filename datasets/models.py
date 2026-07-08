@@ -68,6 +68,12 @@ class Dataset(AuditableMixin, models.Model):
         ordering = ['-created_at']
         verbose_name = 'Dataset'
         verbose_name_plural = 'Datasets'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'uploaded_by'],
+                name='uq_dataset_name_user'
+            ),
+        ]
     
     def __str__(self):
         return self.name

@@ -299,33 +299,33 @@
 
 ---
 
-## Phase 6 — Data Integrity, Export & Polish ✨
+## Phase 6 — Data Integrity, Export & Polish ✅
 
 **Goal**: Ensure data quality, add bulk operations, write tests.
 
 ### 6.1 Management Commands
-- [ ] `python manage.py audit_consistency_check` — verify all FK relationships intact, no orphaned records
-- [ ] `python manage.py report_data_fix` — fix null accuracy scores, recalculate summaries
-- [ ] `python manage.py generate_missing_reports` — for completed experiments with no report
-- [ ] `python manage.py sync_audit_metrics` — recalculate system metrics from raw experiment data
-- [ ] `python manage.py fix_orphaned_files` — clean up media files without DB records
+- [x] `python manage.py audit_consistency_check` — verify all FK relationships intact, no orphaned records
+- [x] `python manage.py report_data_fix` — fix null accuracy scores, recalculate summaries
+- [x] `python manage.py generate_missing_reports` — for completed experiments with no report
+- [x] `python manage.py sync_audit_metrics` — recalculate system metrics from raw experiment data
+- [x] `python manage.py fix_orphaned_files` — clean up media files without DB records
 
 ### 6.2 Model Improvements
-- [ ] `Report.generated_at` — separate from `created_at`, tracks last file generation time
-- [ ] `Experiment.configuration_snapshot` — deep copy of technique params at run time
-- [ ] `AuditLog.object_repr` — populate automatically via `save()` override
-- [ ] Add `Meta.unique_together` or constraints where missing
+- [x] `Report.generated_at` — separate from `created_at`, tracks last file generation time
+- [x] `Experiment.configuration_snapshot` — deep copy of technique params at run time
+- [x] `AuditLog.object_repr` — populate automatically via `save()` override
+- [x] Add `Meta.unique_together` or constraints where missing
 
 ### 6.3 Bulk Export
-- [ ] `/export/experiments/` — export all user's experiments as CSV/JSON/XLSX
-- [ ] `/export/reports/` — export report metadata as CSV/JSON
-- [ ] Date range filtering, technique filtering, format selection
-- [ ] Zip download for multi-file exports
+- [x] `/export/experiments/` — export all user's experiments as CSV/JSON/XLSX
+- [x] `/export/reports/` — export report metadata as CSV/JSON
+- [x] Date range filtering, technique filtering, format selection
+- [x] Zip download for multi-file exports
 
 ### 6.4 Shareable Result Links
-- [ ] Token-based sharing for individual experiment results
-- [ ] `/share/experiment/<token>/` — public view of experiment (no login)
-- [ ] Uses same `share_token` logic from report sharing (Phase 3.5)
+- [x] Token-based sharing for individual experiment results
+- [x] `/share/experiment/<token>/` — public view of experiment (no login)
+- [x] Uses same `share_token` logic from report sharing (Phase 3.5)
 
 ### 6.5 Testing
 - [ ] Write tests for `AuditLog` model and middleware
@@ -336,8 +336,8 @@
 - [ ] Aim for >70% coverage on new code
 
 ### 6.6 Templates for Data Integrity
-- [ ] `export/templates/export/export_page.html`
-- [ ] `share/templates/share/experiment_view.html`
+- [x] `export/templates/export/export_page.html`
+- [x] `share/templates/share/experiment_view.html`
 
 ---
 

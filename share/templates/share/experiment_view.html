@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {% if shared %}Shared Experiment Result
+  {% elif creating %}Create Share Link
+  {% elif managing %}Manage Share Links
+  {% else %}Experiment Share{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  {% if error %}
+    <div class="alert alert-danger text-center py-5">
+      <i class="bi bi-exclamation-triangle display-4 d-block mb-3"></i>
+      <h4>{{ error }}</h4>
+      <p class="text-muted">Contact the person who shared this link if you need access.</p>
+    </div>
+
+  {% elif created %}
+    <div class="alert alert-success">
+      <i class="bi bi-check-circle me-2"></i> Share link created successfully!
+    </div>
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-dark text-white">
+        <i class="bi bi-link-45deg me-1"></i> Share Link
+      </div>
+      <div class="card-body">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="shareUrl" value="{{ share_url }}" readonly>
+          <button class="btn btn-primary" onclick="navigator.clipboard.writeText('{{ share_url }}')">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="row text-muted small">
+          <div class="col-md-4">
+            <strong>Permissions:</strong>
+            <span class="badge bg-{% if share.permissions == 'download' %}success{% else %}secondary{% endif %}">
+              {{ share.get_permissions_display }}
+            </span>
+          </div>
+          <div class="col-md-4">
+            <strong>Expires:</strong>
+            {% if share.expires_at %}{{ share.expires_at|date:"M d, Y H:i" }}{% else %}Never{% endif %}
+          </div>
+          <div class="col-md-4">
+            <strong>Max Views:</strong>
+            {% if share.max_access_count %}{{ share.max_access_count }}{% else %}Unlimited{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <a href="{% url 'experiments:detail' experiment.id %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to Experiment
+    </a>
+
+  {% elif creating %}
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <i class="bi bi-share me-1"></i> Create Share Link
+          </div>
+          <div class="card-body">
+            <p class="mb-3">
+              Create a shareable link for
+              <strong>{{ experiment.name }}</strong>.
+            </p>
+            <form method="post">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Permissions</label>
+                <select name="permissions" class="form-select">
+                  <option value="view_only">View Only</option>
+                  <option value="download">Can Download</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Expires after (days)</label>
+                <input type="number" name="expires_days" class="form-control" placeholder="Leave empty for no expiry" min="1">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Max views</label>
+                <input type="number" name="max_access" class="form-control" placeholder="Leave empty for unlimited" min="1">
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-link me-1"></i> Generate Share Link
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% elif managing %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4><i class="bi bi-share me-2"></i> Share Links for {{ experiment.name }}</h4>
+      <a href="{% url 'share:create_experiment_share' experiment.id %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus me-1"></i> New Link
+      </a>
+    </div>
+    {% if links %}
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Token</th>
+            <th>Permissions</th>
+            <th>Created</th>
+            <th>Access Count</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for link in links %}
+          <tr>
+            <td><code>{{ link.share_token|stringformat:"s"|truncatechars:12 }}</code></td>
+            <td>{{ link.get_permissions_display }}</td>
+            <td>{{ link.created_at|date:"Y-m-d" }}</td>
+            <td>{{ link.access_count }}{% if link.max_access_count %}/{{ link.max_access_count }}{% endif %}</td>
+            <td>
+              {% if link.is_active %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if link.is_active %}
+              <form method="post" action="{% url 'share:revoke_experiment_link' link.id %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke this share link?')">
+                  <i class="bi bi-x-circle"></i> Revoke
+                </button>
+              </form>
+              {% else %}
+                <span class="text-muted">Revoked</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-share display-4 d-block mb-3"></i>
+      <p>No share links yet for this experiment.</p>
+    </div>
+    {% endif %}
+    <a href="{% url 'experiments:detail' experiment.id %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to Experiment
+    </a>
+
+  {% elif shared %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class="bi bi-eye me-1"></i> Shared Experiment Result
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <small class="text-muted">Shared via link</small>
+        </div>
+
+        <h3>{{ experiment.name }}</h3>
+        <p class="text-muted">{{ experiment.description|default:"No description" }}</p>
+
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="text-primary mb-0">{{ experiment.privacy_score|default:"-" }}</h5>
+                <small class="text-muted">Privacy Score</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="text-success mb-0">{{ experiment.accuracy|floatformat:2|default:"-" }}</h5>
+                <small class="text-muted">Accuracy</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="text-info mb-0">{{ experiment.execution_time|default:"-" }}s</h5>
+                <small class="text-muted">Execution Time</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="text-warning mb-0">{{ experiment.throughput|default:"-" }}</h5>
+                <small class="text-muted">Throughput (tps)</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <table class="table">
+          <tr>
+            <th style="width:200px">Technique</th>
+            <td>{{ experiment.privacy_technique.name }}</td>
+          </tr>
+          <tr>
+            <th>Dataset</th>
+            <td>{{ experiment.dataset.name }}</td>
+          </tr>
+          <tr>
+            <th>Status</th>
+            <td><span class="badge bg-{% if experiment.status == 'completed' %}success{% elif experiment.status == 'failed' %}danger{% else %}secondary{% endif %}">{{ experiment.get_status_display }}</span></td>
+          </tr>
+          <tr>
+            <th>Anonymity Set Size</th>
+            <td>{{ experiment.anonymity_set_size|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Created</th>
+            <td>{{ experiment.created_at|date:"M d, Y H:i" }}</td>
+          </tr>
+          {% if experiment.completed_at %}
+          <tr>
+            <th>Completed</th>
+            <td>{{ experiment.completed_at|date:"M d, Y H:i" }}</td>
+          </tr>
+          {% endif %}
+        </table>
+
+        {% if experiment.metrics %}
+        <h5 class="mt-4">Metrics</h5>
+        <pre class="bg-light p-3 rounded"><code>{{ experiment.metrics|pprint }}</code></pre>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="text-center text-muted small">
+      <p>Powered by Blockchain Privacy Platform</p>
+    </div>
+
+  {% endif %}
+</div>
+{% endblock %}

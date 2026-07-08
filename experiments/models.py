@@ -26,6 +26,8 @@ class Experiment(AuditableMixin, models.Model):
     
     # Experiment Configuration
     configuration = models.JSONField(default=dict)
+    configuration_snapshot = models.JSONField(default=dict, blank=True,
+        help_text="Deep copy of technique params at run time for historical integrity")
     
     # Results
     accuracy = models.FloatField(null=True, blank=True)
@@ -52,6 +54,12 @@ class Experiment(AuditableMixin, models.Model):
     class Meta:
         db_table = 'experiments'
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'name'],
+                name='uq_experiment_user_name'
+            ),
+        ]
 
 
 class ExperimentComparison(AuditableMixin, models.Model):

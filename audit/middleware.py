@@ -119,6 +119,27 @@ class AuditMiddleware:
                 return int(segment)
         return 0
 
+    def _resolve_object_repr(self, content_type, object_id):
+        """Try to resolve a human-readable representation for the audited object."""
+        if not object_id:
+            return ""
+        model_map = {
+            "Experiment": ("experiments", "Experiment"),
+            "Dataset": ("datasets", "Dataset"),
+            "Report": ("reports", "Report"),
+            "User": ("accounts", "User"),
+        }
+        app_label, model_name = model_map.get(content_type, (None, None))
+        if app_label is None:
+            return ""
+        try:
+            from django.apps import apps
+            model = apps.get_model(app_label, model_name)
+            obj = model.objects.get(pk=object_id)
+            return str(obj)[:255]
+        except Exception:
+            return ""
+
     def _create_audit_log(self, request, response, audit_data):
         if response.status_code in (302, 303) and "/accounts/login/" in response.get("Location", ""):
             return
@@ -126,12 +147,15 @@ class AuditMiddleware:
         user = request.user if request.user.is_authenticated else None
 
         try:
+            object_repr = self._resolve_object_repr(
+                audit_data["content_type"], audit_data["object_id"]
+            )
             AuditLog.objects.create(
                 user=user,
                 action_type=audit_data["action_type"],
                 content_type=audit_data["content_type"],
                 object_id=audit_data["object_id"],
-                object_repr="",
+                object_repr=object_repr,
                 changes={
                     "user_agent": audit_data["user_agent"],
                     "status_code": response.status_code,

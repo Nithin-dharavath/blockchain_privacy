@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Bulk Export - {{ export_type|title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Bulk Export</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+      <i class="bi bi-download me-2"></i>
+      Bulk Export {{ export_type|title }}
+    </h2>
+    <div class="btn-group">
+      <a href="?export_type=experiments" class="btn btn-outline-primary {% if export_type == 'experiments' %}active{% endif %}">
+        <i class="bi bi-diagram-3 me-1"></i>Experiments
+      </a>
+      <a href="?export_type=reports" class="btn btn-outline-primary {% if export_type == 'reports' %}active{% endif %}">
+        <i class="bi bi-file-earmark-text me-1"></i>Reports
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-3">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+          <i class="bi bi-funnel me-1"></i> Filters
+        </div>
+        <div class="card-body">
+          <form method="get" action=".">
+            <input type="hidden" name="export_type" value="{{ export_type }}">
+
+            {% if export_type == 'experiments' %}
+            <div class="mb-3">
+              <label class="form-label">Technique</label>
+              <select name="technique" class="form-select">
+                <option value="">All Techniques</option>
+                {% for t in techniques %}
+                <option value="{{ t.technique_type }}" {% if current_filters.technique == t.technique_type %}selected{% endif %}>
+                  {{ t.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="running" {% if current_filters.status == 'running' %}selected{% endif %}>Running</option>
+                <option value="completed" {% if current_filters.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="failed" {% if current_filters.status == 'failed' %}selected{% endif %}>Failed</option>
+              </select>
+            </div>
+            {% endif %}
+
+            {% if export_type == 'reports' %}
+            <div class="mb-3">
+              <label class="form-label">Report Type</label>
+              <select name="report_type" class="form-select">
+                <option value="">All Types</option>
+                <option value="single" {% if current_filters.report_type == 'single' %}selected{% endif %}>Single Experiment</option>
+                <option value="comparison" {% if current_filters.report_type == 'comparison' %}selected{% endif %}>Comparison</option>
+                <option value="summary" {% if current_filters.report_type == 'summary' %}selected{% endif %}>Summary</option>
+              </select>
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label">Date From</label>
+              <input type="date" name="date_from" class="form-control" value="{{ current_filters.date_from|default:'' }}">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Date To</label>
+              <input type="date" name="date_to" class="form-control" value="{{ current_filters.date_to|default:'' }}">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Format</label>
+              <select name="format" class="form-select">
+                <option value="csv" {% if current_filters.format == 'csv' %}selected{% endif %}>CSV</option>
+                <option value="json" {% if current_filters.format == 'json' %}selected{% endif %}>JSON</option>
+                {% if export_type == 'experiments' %}
+                <option value="xlsx" {% if current_filters.format == 'xlsx' %}selected{% endif %}>Excel (XLSX)</option>
+                {% endif %}
+                <option value="zip" {% if current_filters.format == 'zip' %}selected{% endif %}>ZIP (CSV + JSON)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-2">
+              <i class="bi bi-search me-1"></i> Filter
+            </button>
+            <button type="submit" name="action" value="download" class="btn btn-success w-100">
+              <i class="bi bi-download me-1"></i> Download
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-9">
+      <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-list me-1"></i> Results</span>
+          <span class="badge bg-secondary">{{ experiments|default:reports|length }} record(s)</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            {% if export_type == 'experiments' %}
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Technique</th>
+                  <th>Dataset</th>
+                  <th>Status</th>
+                  <th>Privacy</th>
+                  <th>Accuracy</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for exp in experiments %}
+                <tr>
+                  <td>{{ exp.id }}</td>
+                  <td>{{ exp.name }}</td>
+                  <td>{{ exp.privacy_technique.name }}</td>
+                  <td>{{ exp.dataset.name }}</td>
+                  <td>
+                    <span class="badge bg-{% if exp.status == 'completed' %}success{% elif exp.status == 'failed' %}danger{% elif exp.status == 'running' %}info{% else %}secondary{% endif %}">
+                      {{ exp.get_status_display }}
+                    </span>
+                  </td>
+                  <td>{{ exp.privacy_score|default:"-" }}</td>
+                  <td>{{ exp.accuracy|default:"-" }}</td>
+                  <td>{{ exp.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center py-4 text-muted">No experiments match your filters.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Type</th>
+                  <th>Format</th>
+                  <th>Experiments</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in reports %}
+                <tr>
+                  <td>{{ r.id }}</td>
+                  <td>{{ r.title }}</td>
+                  <td>{{ r.get_report_type_display }}</td>
+                  <td><span class="badge bg-info">{{ r.file_format|upper }}</span></td>
+                  <td>{{ r.experiments.count }}</td>
+                  <td>{{ r.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center py-4 text-muted">No reports match your filters.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
