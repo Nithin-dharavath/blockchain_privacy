@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'datasets',
     'admin_panel',
     'audit',
+    'notifications',
 ]
 
 MIDDLEWARE = [
