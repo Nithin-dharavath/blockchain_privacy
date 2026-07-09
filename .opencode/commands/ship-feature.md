@@ -10,12 +10,12 @@ Ship the current roadmap task branch and move to the next roadmap task.
 
 ## Rules
 
-* Roadmap source: `to-do.md`
+* Roadmap source: `test-todo.md`
 * One branch = one top-level roadmap task
 * Branch format: `feature/<task-title-slug>`
 * Never commit to default branch
 * Always squash merge
-* Update **only** the matched roadmap task in `to-do.md`
+* Update **only** the matched roadmap task in `test-todo.md`
 * Create the next branch from roadmap order
 * Rename the session to the next task after creating the next branch
 
@@ -44,7 +44,7 @@ Ship the current roadmap task branch and move to the next roadmap task.
    * must not be the default branch
    * must start with `feature/`
 
-4. Read `to-do.md` and parse **top-level roadmap tasks only** in order.
+4. Read `test-todo.md` and parse **top-level roadmap tasks only** in order.
    For each task extract:
 
    * `TASK_ID`
@@ -75,7 +75,7 @@ Ship the current roadmap task branch and move to the next roadmap task.
    * `COMMIT_MESSAGE` → short Conventional Commit for the matched task
    * `PR_TITLE` → same meaning without the commit prefix
 
-9. Update `to-do.md`:
+9. Update `test-todo.md`:
 
    * mark the matched top-level roadmap task `[x]`
    * mark nested items only if clearly completed
@@ -168,7 +168,7 @@ Return only:
 
 * current branch is the default branch
 * current branch is not `feature/<slug>`
-* `to-do.md` cannot be parsed
+* `test-todo.md` cannot be parsed
 * branch slug does not match a roadmap task
 * no changes to commit
 * task is clearly incomplete
