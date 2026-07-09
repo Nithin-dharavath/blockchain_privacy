@@ -49,3 +49,23 @@ class TestSecureMultiPartyComputation(TestCase):
         self.assertIn('privacy_score', result)
         self.assertEqual(result['num_parties'], 5)
         self.assertEqual(result['technique'], 'Secure Multi-Party Computation')
+
+
+class TestSecureMPCEdgeCases(TestCase):
+    def test_threshold_one(self):
+        mpc = SecureMultiPartyComputation(num_parties=3, threshold=1)
+        secret = 9999
+        shares = mpc.generate_shares(secret)
+        reconstructed = mpc.reconstruct_secret(shares[:1])
+        self.assertEqual(reconstructed, secret)
+
+    def test_threshold_one_secure_sum(self):
+        mpc = SecureMultiPartyComputation(num_parties=3, threshold=1)
+        result = mpc.secure_sum([10, 20, 30])
+        self.assertEqual(result, 60)
+
+    def test_threshold_one_evaluate_privacy(self):
+        mpc = SecureMultiPartyComputation(num_parties=3, threshold=1)
+        result = mpc.evaluate_privacy(num_parties=3, threshold=1, num_computations=5)
+        self.assertIn('privacy_score', result)
+        self.assertEqual(result['threshold'], 1)

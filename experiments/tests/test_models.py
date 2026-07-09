@@ -106,3 +106,78 @@ class TestExperimentComparisonModel(TestCase):
 
     def test_many_to_many(self):
         self.assertEqual(self.comparison.experiments.count(), 2)
+
+
+class TestExperimentEdgeCases(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="edgeexpuser", password="pass"
+        )
+        self.technique = PrivacyTechnique.objects.create(
+            name="Edge Tech",
+            technique_type="ring_signature",
+            description="Test",
+            algorithm_details="Test",
+        )
+        csv_file = SimpleUploadedFile(
+            "edgedata.csv", b"a,b\n1,2", content_type="text/csv"
+        )
+        self.dataset = Dataset.objects.create(
+            name="Edge Dataset",
+            description="Test",
+            dataset_type="custom",
+            file=csv_file,
+            uploaded_by=self.user,
+        )
+
+    def test_create_with_empty_config(self):
+        exp = Experiment.objects.create(
+            name="Empty Config",
+            user=self.user,
+            dataset=self.dataset,
+            privacy_technique=self.technique,
+            configuration={},
+        )
+        self.assertEqual(exp.configuration, {})
+
+    def test_create_with_empty_dict_config(self):
+        exp = Experiment.objects.create(
+            name="Empty Dict Config",
+            user=self.user,
+            dataset=self.dataset,
+            privacy_technique=self.technique,
+            configuration={},
+        )
+        self.assertEqual(exp.configuration, {})
+
+    def test_create_with_null_metrics(self):
+        exp = Experiment.objects.create(
+            name="Null Metrics",
+            user=self.user,
+            dataset=self.dataset,
+            privacy_technique=self.technique,
+            status="completed",
+            privacy_score=None,
+            accuracy=None,
+            execution_time=None,
+            throughput=None,
+            anonymity_set_size=None,
+        )
+        self.assertIsNone(exp.privacy_score)
+        self.assertIsNone(exp.accuracy)
+
+    def test_create_with_null_metrics(self):
+        exp = Experiment.objects.create(
+            name="Null Metrics",
+            user=self.user,
+            dataset=self.dataset,
+            privacy_technique=self.technique,
+            status="completed",
+            privacy_score=None,
+            accuracy=None,
+            execution_time=None,
+            throughput=None,
+            anonymity_set_size=None,
+        )
+        self.assertIsNone(exp.privacy_score)
+        self.assertIsNone(exp.accuracy)

@@ -86,3 +86,57 @@ class TestDatasetModel(TestCase):
         self.dataset.approved_by = self.user
         self.dataset.save()
         self.assertEqual(self.dataset.status, "approved")
+
+
+class TestDatasetEdgeCases(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="edgeuser", password="pass"
+        )
+
+    def test_empty_dataset_zero_rows_zero_columns(self):
+        csv_file = SimpleUploadedFile(
+            "empty.csv", b"", content_type="text/csv"
+        )
+        dataset = Dataset.objects.create(
+            name="Empty Dataset",
+            description="Empty",
+            dataset_type="custom",
+            file=csv_file,
+            uploaded_by=self.user,
+        )
+        df = dataset.get_data()
+        self.assertIsNone(df)
+        self.assertIsNone(dataset.row_count)
+
+    def test_get_sample_data_empty(self):
+        csv_file = SimpleUploadedFile(
+            "empty2.csv", b"", content_type="text/csv"
+        )
+        dataset = Dataset.objects.create(
+            name="Empty Dataset 2",
+            description="Empty",
+            dataset_type="custom",
+            file=csv_file,
+            uploaded_by=self.user,
+        )
+        sample = dataset.get_sample_data()
+        self.assertIsNone(sample)
+
+    def test_string_only_columns(self):
+        csv_file = SimpleUploadedFile(
+            "strings.csv",
+            b"name,city,country\nAlice,NYC,USA\nBob,London,UK\nCharlie,Paris,FR",
+            content_type="text/csv",
+        )
+        dataset = Dataset.objects.create(
+            name="String Only Dataset",
+            description="Strings only",
+            dataset_type="custom",
+            file=csv_file,
+            uploaded_by=self.user,
+        )
+        df = dataset.get_data()
+        self.assertIsNotNone(df)
+        self.assertEqual(len(df), 3)
+        self.assertEqual(df.iloc[0]["name"], "Alice")

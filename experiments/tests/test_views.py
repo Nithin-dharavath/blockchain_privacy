@@ -266,3 +266,44 @@ class ExperimentDeleteViewTest(TestCase):
         response = self.client.post(reverse("experiments:delete", args=[self.experiment.pk]))
         self.assertRedirects(response, reverse("experiments:list"))
         self.assertEqual(Experiment.objects.count(), 0)
+
+
+class ComparisonDetailNullMetricsTest(TestCase):
+    def setUp(self):
+        self.user = create_user(username="nullcmp", password="testpass123")
+        self.technique = create_technique("ring_signature")
+        self.dataset = create_dataset_csv(self.user)
+        self.exp_null = create_completed_experiment(
+            self.user, self.technique, self.dataset,
+            name="Null Metrics Exp",
+            privacy_score=None, accuracy=None,
+            execution_time=None, throughput=None,
+            anonymity_set_size=None,
+        )
+        self.exp_normal = create_completed_experiment(
+            self.user, self.technique, self.dataset,
+            name="Normal Exp",
+        )
+        self.comparison = ExperimentComparison.objects.create(
+            name="Null Metrics Cmp", user=self.user,
+        )
+        self.comparison.experiments.set([self.exp_null, self.exp_normal])
+
+    def test_comparison_detail_with_null_metrics_returns_200(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("experiments:comparison_detail", args=[self.comparison.pk]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("ranking_data", response.context)
+
+    def test_comparison_detail_with_null_metrics_has_ranking(self):
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("experiments:comparison_detail", args=[self.comparison.pk]),
+        )
+        ranking = response.context["ranking_data"]
+        for entry in ranking:
+            self.assertIn("privacy_score", entry)
+            self.assertIn("accuracy", entry)
+            self.assertIn("execution_time", entry)

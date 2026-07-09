@@ -63,3 +63,18 @@ class TestTrustedExecutionEnvironment(TestCase):
         self.assertIn('privacy_score', result)
         self.assertTrue(result['hardware_isolated'])
         self.assertEqual(result['technique'], 'Trusted Execution Environment')
+
+
+class TestTrustedExecutionEdgeCases(TestCase):
+    def test_evaluate_privacy_zero_data_size(self):
+        tee = TrustedExecutionEnvironment()
+        result = tee.evaluate_privacy(num_operations=0, data_size_mb=0)
+        self.assertIn('privacy_score', result)
+        self.assertTrue(result['hardware_isolated'])
+        self.assertEqual(result['num_measurements'], 0)
+
+    def test_enclave_with_empty_code_hash(self):
+        tee = TrustedExecutionEnvironment()
+        result = tee.create_enclave("")
+        self.assertIn('enclave_id', result)
+        self.assertEqual(result['status'], 'created')
