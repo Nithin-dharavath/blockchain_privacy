@@ -202,7 +202,7 @@
 
 ---
 
-## Phase 7: Integration Tests
+## [x] Phase 7: Integration Tests
 
 | # | Scenario |
 |---|---|
