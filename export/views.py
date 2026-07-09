@@ -52,6 +52,7 @@ def export_experiments(request):
         techniques = PrivacyTechnique.objects.all()
         return render(request, "export/export_page.html", {
             "experiments": experiments,
+            "reports": [],
             "techniques": techniques,
             "current_filters": {
                 "technique": technique,
@@ -101,6 +102,7 @@ def export_reports(request):
 
     if request.GET.get("action") != "download":
         return render(request, "export/export_page.html", {
+            "experiments": [],
             "reports": reports,
             "current_filters": {
                 "date_from": date_from,

@@ -14,6 +14,7 @@ from experiments.models import Experiment
 import json
 import csv
 import os
+import io
 import logging
 from datetime import datetime
 from .pdf_generator import PDFReportGenerator
@@ -85,7 +86,7 @@ def report_generate(request):
             create_notification(
                 recipient=request.user,
                 verb='report_ready',
-                description=f'Report "{report.name}" is ready for download.',
+                description=f'Report "{report.title}" is ready for download.',
                 action_url=reverse('reports:detail', kwargs={'pk': report.pk}),
             )
             messages.success(request, 'Report generated successfully!')
@@ -694,7 +695,7 @@ def share_report(request, pk):
         create_notification(
             recipient=shared_with_user,
             verb='report_shared',
-            description=f'Report "{report.name}" was shared with you by {request.user.username}.',
+            description=f'Report "{report.title}" was shared with you by {request.user.username}.',
             actor=request.user,
             action_url=reverse('reports:detail', kwargs={'pk': report.pk}),
         )

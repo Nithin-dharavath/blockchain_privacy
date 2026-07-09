@@ -806,6 +806,8 @@ def comparison_detail(request, pk):
 @login_required
 def export_comparison(request, pk):
     """Export comparison data to CSV or PDF"""
+    from django.http import HttpResponse
+    
     comparison = get_object_or_404(ExperimentComparison, pk=pk, user=request.user)
     experiments = comparison.experiments.all()
     
