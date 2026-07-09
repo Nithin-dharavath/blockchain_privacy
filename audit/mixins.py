@@ -13,9 +13,10 @@ class AuditableMixin(models.Model):
 
     def _get_field_dict(self):
         result = {}
+        deferred = self.get_deferred_fields()
         for field in self._meta.fields:
             name = field.name
-            if name == "id":
+            if name == "id" or name in deferred:
                 continue
             if field.is_relation and hasattr(field, "attname"):
                 value = getattr(self, field.attname)
