@@ -19,3 +19,8 @@ screen shorts/
 readme.txt
 QUICK_START.txt
 graphify-out/
+.claude/
+.opencode/
+AGENTS.md
+test-todo.md
+conftest.py
