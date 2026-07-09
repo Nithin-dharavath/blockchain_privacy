@@ -75,7 +75,7 @@
 
 ---
 
-## Phase 4: Form Tests (per app `tests/test_forms.py`)
+## [x] Phase 4: Form Tests (per app `tests/test_forms.py`)
 
 | App | Class | Tests |
 |---|---|---|
