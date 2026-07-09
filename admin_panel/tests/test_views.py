@@ -27,6 +27,39 @@ class AdminDashboardViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "admin_panel/dashboard.html")
 
+
+class RegularUserBlockedFromAdminTest(TestCase):
+    def setUp(self):
+        self.user = create_user(username="regularuser", password="testpass123")
+        self.admin = create_admin()
+
+    def _assert_blocked(self, url_name, *args):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse(url_name, args=args))
+        self.assertNotEqual(response.status_code, 200,
+                            f"Regular user should be blocked from {url_name}")
+
+    def test_regular_user_blocked_from_manage_users(self):
+        self._assert_blocked("admin_panel:manage_users")
+
+    def test_regular_user_blocked_from_manage_datasets(self):
+        self._assert_blocked("admin_panel:manage_datasets")
+
+    def test_regular_user_blocked_from_manage_techniques(self):
+        self._assert_blocked("admin_panel:manage_techniques")
+
+    def test_regular_user_blocked_from_audit_logs(self):
+        self._assert_blocked("admin_panel:audit_logs")
+
+    def test_regular_user_blocked_from_notifications(self):
+        self._assert_blocked("admin_panel:notifications")
+
+    def test_regular_user_blocked_from_system_reports(self):
+        self._assert_blocked("admin_panel:system_reports")
+
+    def test_regular_user_blocked_from_error_reports(self):
+        self._assert_blocked("admin_panel:error_reports")
+
     def test_dashboard_context(self):
         self.client.force_login(self.admin)
         response = self.client.get(reverse("admin_panel:dashboard"))

@@ -1,5 +1,7 @@
+from datetime import timedelta
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from privacy_platform.test_utils import (
     create_user, create_technique, create_dataset_csv,
     create_completed_experiment, create_experiment_share,
@@ -137,3 +139,32 @@ class RevokeLinkViewTest(TestCase):
         )
         self.share.refresh_from_db()
         self.assertTrue(self.share.is_revoked)
+
+
+class SharedViewExpiredTokenTest(TestCase):
+    def setUp(self):
+        self.user = create_user(username="expireduser", password="testpass123")
+        self.technique = create_technique("ring_signature")
+        self.dataset = create_dataset_csv(self.user)
+        self.experiment = create_completed_experiment(
+            self.user, self.technique, self.dataset,
+        )
+        self.share = create_experiment_share(self.experiment, self.user)
+        self.share.expires_at = timezone.now() - timedelta(days=1)
+        self.share.save(update_fields=["expires_at"])
+
+    def test_shared_view_expired_returns_error(self):
+        response = self.client.get(
+            reverse("share:experiment_shared_view", args=[self.share.share_token]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("error", response.context)
+
+    def test_shared_view_revoked_after_revocation_view_error(self):
+        self.share.is_revoked = True
+        self.share.save(update_fields=["is_revoked"])
+        second_response = self.client.get(
+            reverse("share:experiment_shared_view", args=[self.share.share_token]),
+        )
+        self.assertEqual(second_response.status_code, 200)
+        self.assertIn("error", second_response.context)

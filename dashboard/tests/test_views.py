@@ -53,3 +53,21 @@ class TechniquesOverviewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(reverse("dashboard:techniques"))
         self.assertIn("technique_stats", response.context)
+
+
+class HomeViewEmptyDashboardTest(TestCase):
+    def setUp(self):
+        self.user = create_user(username="emptydash", password="testpass123")
+
+    def test_home_with_zero_experiments_returns_200(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("dashboard:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "dashboard/home.html")
+
+    def test_home_with_zero_experiments_has_zero_context(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("dashboard:home"))
+        self.assertEqual(response.context["total_experiments"], 0)
+        self.assertEqual(response.context["completed_experiments"], 0)
+        self.assertEqual(response.context["total_datasets"], 0)

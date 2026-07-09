@@ -55,3 +55,21 @@ class TestRingSignature(TestCase):
         result = self.signer.evaluate_privacy(ring_size=10, num_transactions=10)
         expected_unlinkability = 1.0 - (1.0 / 10)
         self.assertAlmostEqual(result['unlinkability_score'], expected_unlinkability, places=4)
+
+
+class TestRingSignatureEdgeCases(TestCase):
+    def test_ring_size_one(self):
+        signer = RingSignature(ring_size=1)
+        priv, pub = signer.generate_key_pair()
+        ring = signer.generate_ring(pub, num_decoys=0)
+        self.assertEqual(len(ring), 1)
+        sig = signer.sign(b"test", priv, ring)
+        result = signer.verify(b"test", sig, ring)
+        self.assertFalse(result)
+
+    def test_ring_size_one_evaluate_privacy(self):
+        signer = RingSignature(ring_size=1)
+        result = signer.evaluate_privacy(ring_size=1, num_transactions=10)
+        self.assertIn('privacy_score', result)
+        self.assertEqual(result['anonymity_set_size'], 1)
+        self.assertAlmostEqual(result['unlinkability_score'], 0.0, places=4)

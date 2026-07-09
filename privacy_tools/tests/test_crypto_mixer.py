@@ -79,3 +79,23 @@ class TestCryptocurrencyMixer(TestCase):
         result = self.mixer.evaluate_privacy(num_transactions=5, pool_size=10)
         self.assertIn('privacy_score', result)
         self.assertEqual(result['technique'], 'Cryptocurrency Mixer')
+
+
+class TestCryptoMixerEdgeCases(TestCase):
+    def test_mix_with_pool_size_zero(self):
+        mixer = CryptocurrencyMixer(pool_size=0, min_delay=1, max_delay=10)
+        result = mixer.mix_transactions()
+        self.assertEqual(result['status'], 'insufficient_pool')
+
+    def test_analyze_anonymity_empty(self):
+        mixer = CryptocurrencyMixer(pool_size=10, min_delay=1, max_delay=10)
+        result = mixer.analyze_anonymity()
+        self.assertEqual(result['anonymity_set_size'], 0)
+        self.assertEqual(result['privacy_score'], 0)
+
+    def test_evaluate_privacy_zero_pool_size(self):
+        mixer = CryptocurrencyMixer(pool_size=0, min_delay=1, max_delay=10)
+        result = mixer.evaluate_privacy(num_transactions=0, pool_size=0)
+        self.assertIn('privacy_score', result)
+        self.assertEqual(result['anonymity_set_size'], 0)
+        self.assertEqual(result['technique'], 'Cryptocurrency Mixer')

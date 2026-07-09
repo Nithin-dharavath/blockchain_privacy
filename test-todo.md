@@ -217,7 +217,7 @@
 
 ---
 
-## Phase 8: Edge Cases
+## [x] Phase 8: Edge Cases
 
 | # | Scenario |
 |---|---|
