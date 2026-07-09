@@ -1,6 +1,6 @@
 ---
 
-description: Execute the current roadmap task on the current feature branch by reading to-do.md, implementing the matched task, and stopping only when the task is complete or blocked.
+description: Execute the current roadmap task on the current feature branch by reading test-todo.md, implementing the matched task, and stopping only when the task is complete or blocked.
 allowed-tools: Read, Edit, Bash
 -------------------------------
 
@@ -10,7 +10,7 @@ Execute **exactly one roadmap task** for the current branch.
 
 ## Rules
 
-* Roadmap source: `to-do.md`
+* Roadmap source: `test-todo.md`
 * One branch = one top-level roadmap task
 * Branch format: `feature/<task-title-slug>`
 * **Implement the matched task in this run**
@@ -28,7 +28,7 @@ Execute **exactly one roadmap task** for the current branch.
 
 2. Validate branch starts with `feature/`. Extract the slug after `feature/` as `CURRENT_SLUG`.
 
-3. Read `to-do.md` and parse top-level roadmap tasks in order.
+3. Read `test-todo.md` and parse top-level roadmap tasks in order.
    For each task, extract:
 
    * `TASK_ID`
@@ -113,7 +113,7 @@ Short checks the user should run or what was verified.
 ## Stop only if
 
 * current branch is not `feature/<slug>`
-* `to-do.md` cannot be parsed
+* `test-todo.md` cannot be parsed
 * branch slug does not match any roadmap task
 * the task depends on missing project context/files and cannot be safely implemented
 * the repo is in a broken state that prevents implementation

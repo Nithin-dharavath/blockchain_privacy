@@ -40,7 +40,7 @@
 
 ---
 
-## Phase 2: Unit Tests — Experiment Runner (`experiments/tests/test_runner.py`)
+## [x] Phase 2: Unit Tests — Experiment Runner (`experiments/tests/test_runner.py`)
 
 | Class | Tests |
 |---|---|
