@@ -53,7 +53,7 @@
 
 ---
 
-## Phase 3: Model Tests (per app `tests/test_models.py`)
+## [x] Phase 3: Model Tests (per app `tests/test_models.py`)
 
 | App | Class | Tests |
 |---|---|---|
